@@ -9,33 +9,26 @@ const rows: ReadonlyArray<any> = [
   { line: 't800', type: 'stop', timestamp: 6000, produced: 1000 },
 ]
 
-const result: ColumnMap<any> = {
+const cols = {
   children: {
     line: {
-      indices: [0, 1, 2, 3, 4, 5],
-      values: ['t800', 't800', 't800', 't800', 't800', 't800'],
+      values: [[0, 1, 2, 3, 4, 5], ['t800', 't800', 't800', 't800', 't800', 't800']],
     },
     type: {
-      indices: [0, 1, 2, 3, 4, 5],
-      values: ['start', 'pause', 'resume', 'pause', 'resume', 'stop'],
+      values: [[0, 1, 2, 3, 4, 5], ['start', 'pause', 'resume', 'pause', 'resume', 'stop']],
     },
     timestamp: {
-      indices: [0, 1, 2, 3, 4, 5],
-      values: [1000, 2000, 3000, 4000, 5000, 6000],
+      values: [[0, 1, 2, 3, 4, 5], [1000, 2000, 3000, 4000, 5000, 6000]],
     },
     reason: {
-      indices: [1, 3],
-      values: ['machine on fire', 'coffee break'],
+      values: [[1, 3], ['machine on fire', 'coffee break']],
     },
     produced: {
-      indices: [5],
-      values: [1000],
+      values: [[5], [1000]],
     },
   },
 }
 
 describe('ColumnMap', () => {
-  it('should compress well', () => {
-    console.log(JSON.stringify(ColumnMap.of(rows)))
-  })
+  it('should compress well', () => expect(ColumnMap.of(rows)).toEqual(cols))
 })

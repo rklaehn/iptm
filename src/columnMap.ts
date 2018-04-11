@@ -5,17 +5,12 @@ import { toCbor } from './cbor'
 import { CompressedArray, DagArray } from './dagArray'
 
 type ColumnMapImpl<T> = {
-  indices: Array<number>
-  values: Array<T>
+  values: [Array<number>, Array<T>]
   children: { [key: string]: ColumnMapImpl<T> }
 }
 const stripInPlace = <T>(store: ColumnMapImpl<T>): ColumnMap<T> => {
-  if (store.values.length !== store.indices.length) {
-    throw new Error()
-  }
-  if (store.values.length === 0) {
+  if (store.values[0].length === 0) {
     delete store.values
-    delete store.indices
   }
   const children = Object.values(store.children)
   if (children.length === 0) {
@@ -27,11 +22,11 @@ const stripInPlace = <T>(store: ColumnMapImpl<T>): ColumnMap<T> => {
 }
 const getCompressedSize = async (m: ColumnMap<any>): Promise<number> => {
   let result = 0
-  if (m.indices !== undefined && m.values !== undefined) {
+  if (m.values !== undefined) {
     // enable delta compression for indices
-    result += await DagArray.getCompressedSize(m.indices, { forceDelta: true })
+    result += await DagArray.getCompressedSize(m.values[0], { forceDelta: true })
     // let the compressor figure out if delta compression makes sense
-    result += await DagArray.getCompressedSize(m.values)
+    result += await DagArray.getCompressedSize(m.values[1])
   }
   if (m.children !== undefined) {
     for (const child of Object.values(m.children)) {
@@ -61,10 +56,10 @@ const compressedSizeDedupImpl = async (
   m: ColumnMap<any>,
   sizes: { [key: string]: number },
 ): Promise<{ [key: string]: number }> => {
-  if (m.indices !== undefined && m.values !== undefined) {
+  if (m.values !== undefined) {
     // enable delta compression for indices
-    const indices = await DagArray.compress(m.indices, { forceDelta: true })
-    const values = await DagArray.compress(m.values)
+    const indices = await DagArray.compress(m.values[0], { forceDelta: true })
+    const values = await DagArray.compress(m.values[1])
     const ib = await getBufferForSizing(indices)
     const vb = await getBufferForSizing(values)
     sizes[sha1(ib)] = ib.length
@@ -89,8 +84,7 @@ const ColumnMapImpl = {
    * We are using mutability, so everything needs to be fresh.
    */
   empty: <T>(): ColumnMapImpl<T> => ({
-    indices: [],
-    values: [],
+    values: [[], []],
     children: {},
   }),
   /**
@@ -151,13 +145,12 @@ export const fromColumnMap = <T>(columns: ColumnMap<T>): ReadonlyArray<T> => {
   // first position is placeholder for the current index
   const path: Array<any> = [undefined]
   const addToRows = (store: ColumnMap<T>): void => {
-    if (store.values !== undefined && store.indices !== undefined) {
-      const indices = store.indices
-      const values = store.values
+    if (store.values !== undefined) {
+      const [indices, values] = store.values
       if (values.length !== indices.length) {
         throw new Error()
       }
-      for (let i = 0; i < store.values.length; i++) {
+      for (let i = 0; i < values.length; i++) {
         const index = indices[i]
         const value = values[i]
         path[0] = index
@@ -181,8 +174,8 @@ export const toColumnMap = <T>(rows: ReadonlyArray<T>): ColumnMap<T> => {
   const rootStore: ColumnMapImpl<T> = ColumnMapImpl.empty()
   const addToValuesAndIndices = (store: ColumnMapImpl<any>, obj: any, index: number): void => {
     if (isPrimitive(obj)) {
-      store.indices.push(index)
-      store.values.push(obj)
+      store.values[0].push(index)
+      store.values[1].push(obj)
     } else {
       Object.entries(obj).forEach(([key, value]) => {
         const childStore = getOrCreateInPlace(store, key)
@@ -197,8 +190,7 @@ export const toColumnMap = <T>(rows: ReadonlyArray<T>): ColumnMap<T> => {
 }
 
 export type ColumnMap<T> = {
-  indices?: ReadonlyArray<number>
-  values?: ReadonlyArray<T>
+  values?: [ReadonlyArray<number>, ReadonlyArray<T>]
   children?: { [key: string]: ColumnMap<T> }
 }
 export const ColumnMap = {
