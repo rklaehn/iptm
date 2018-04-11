@@ -1,9 +1,6 @@
 // tslint:disable:no-if-statement no-expression-statement no-shadowed-variable readonly-array
 // tslint:disable:array-type no-console
-import * as fs from 'fs'
-import { toCbor } from './cbor'
-import { ColumnMap, fromColumnMap, toColumnMap } from './columnMap'
-import { deflate } from './dagArray'
+import { fromColumnMap, toColumnMap } from './columnMap'
 import { logCompression } from './logCompression'
 
 const roundtrip = <T>(rows: ReadonlyArray<T>): ReadonlyArray<T> => fromColumnMap(toColumnMap(rows))

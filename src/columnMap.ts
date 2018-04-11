@@ -4,11 +4,6 @@ import * as shajs from 'sha.js'
 import { toCbor } from './cbor'
 import { CompressedArray, DagArray } from './dagArray'
 
-export type ColumnMap<T> = {
-  indices?: ReadonlyArray<number>
-  values?: ReadonlyArray<T>
-  children?: { [key: string]: ColumnMap<T> }
-}
 type ColumnMapImpl<T> = {
   indices: Array<number>
   values: Array<T>
@@ -88,10 +83,6 @@ const getCompressedSizesDedup = (m: ColumnMap<any>): Promise<number> =>
     return Object.values(sizes).reduce((x, y) => x + y, 0)
   })
 
-export const ColumnMap = {
-  compressedSize: getCompressedSize,
-  compressedSizeDedup: getCompressedSizesDedup,
-}
 const ColumnMapImpl = {
   /**
    * Creates a new empty column map.
@@ -203,4 +194,16 @@ export const toColumnMap = <T>(rows: ReadonlyArray<T>): ColumnMap<T> => {
     addToValuesAndIndices(rootStore, row, index)
   })
   return ColumnMapImpl.build<T>(rootStore)
+}
+
+export type ColumnMap<T> = {
+  indices?: ReadonlyArray<number>
+  values?: ReadonlyArray<T>
+  children?: { [key: string]: ColumnMap<T> }
+}
+export const ColumnMap = {
+  compressedSize: getCompressedSize,
+  compressedSizeDedup: getCompressedSizesDedup,
+  of: toColumnMap,
+  toArray: fromColumnMap,
 }

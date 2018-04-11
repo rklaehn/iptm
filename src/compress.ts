@@ -1,7 +1,7 @@
 // tslint:disable:no-if-statement no-expression-statement no-shadowed-variable readonly-array
 // tslint:disable:array-type no-console
 import * as fs from 'fs'
-import { logCompression } from './logCompression';
+import { logCompression } from './logCompression'
 
 if (process.argv.length <= 2) {
   console.log('yarn compress <json file>')
