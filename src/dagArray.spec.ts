@@ -1,7 +1,7 @@
 // tslint:disable:no-if-statement no-object-mutation no-expression-statement no-shadowed-variable readonly-array
 // tslint:disable:array-type no-delete no-let no-console
 import * as seedrandom from 'seedrandom'
-import { compressAllOptions, DagArray, fromDelta, toDelta } from './dagArray'
+import { compressAllOptions, CompressResult, DagArray, fromDelta, toDelta } from './dagArray'
 
 describe('toDelta/fromDelta', () => {
   const roundtrip = (xs: Array<number>) => fromDelta(xs[0], toDelta(xs))
@@ -14,6 +14,8 @@ describe('toDelta/fromDelta', () => {
     expect(roundtrip(xs)).toEqual(xs)
   })
 })
+
+const stripData = (r: ReadonlyArray<CompressResult>) => r.map(({ type, size }) => ({ type, size }))
 
 describe('DagArray', () => {
   const smallArray = ['a', 'b', 'c']
@@ -52,13 +54,38 @@ describe('DagArray', () => {
           .then(x => x[0]),
       ).resolves.toEqual('delta-deflate'))
 
+    it('example enum compression', () => {
+      const sr = seedrandom('')
+      const types = Array.from(
+        { length: 1000 },
+        (_, i) =>
+          i === 0 ? 'start' : i === 1000 - 1 ? 'stop' : sr.double() > 0.5 ? 'pause' : 'resume',
+      )
+      console.log(types)
+      console.log(JSON.stringify(types).length)
+      return compressAllOptions(types)
+        .then(stripData)
+        .then(x => console.log(x))
+    })
+
+    it('example temperature data compression', () => {
+      const sr = seedrandom('')
+      const types = Array.from({ length: 1000 }, () => Math.floor(sr.double() * 100) / 500 + 293)
+      console.log(types)
+      console.log(JSON.stringify(types).length)
+      return compressAllOptions(types)
+        .then(stripData)
+        .then(x => console.log(x))
+    })
+
     it('should have better compression when using delta compression for linear sequences', () => {
       const rnd = seedrandom('x')
       const timestamps = Array.from(
         { length: 1000 },
-        (_, i) => 1000000000 + Math.floor(rnd() * 10) + i * 1000,
+        (_, i) => 1523567653397 + Math.floor(rnd() * 6) + i * 1000,
       )
       console.log(timestamps)
+      console.log(JSON.stringify(timestamps).length)
       expect(
         compressAllOptions(timestamps).then(_ => _.map(({ size, type }) => ({ size, type }))),
       ).resolves.toEqual([

@@ -52,7 +52,7 @@ export const inflate = (b: Buffer): Promise<Buffer> =>
     })
   })
 
-type CompressResult = {
+export type CompressResult = {
   type: 'uncompressed' | 'deflate' | 'delta-deflate'
   size: number
   dag: DagArray
@@ -91,6 +91,27 @@ const deltaCompressed = (ns: ReadonlyArray<number>): Promise<CompressResult> =>
 
 const compare = (x: number, y: number): number => (x < y ? -1 : x > y ? 1 : 0)
 
+const canDeltaCompress = (xs: ReadonlyArray<any>): ReadonlyArray<number> | undefined => {
+  if (xs.length <= 1) {
+    return
+  }
+  for (let i = 0; i < xs.length; i++) {
+    if (!Number.isInteger(xs[i])) {
+      return
+    }
+  }
+  const ns: ReadonlyArray<number> = xs
+  for (let i = 0; i < xs.length - 1; i++) {
+    const x0 = ns[i]
+    const x1 = ns[i + 1]
+    const delta = x1 - x0
+    if (delta + x0 !== x1) {
+      return
+    }
+  }
+  return ns
+}
+
 export const compressAllOptions = (
   xs: ReadonlyArray<any>,
   options?: CompressionOptions,
@@ -99,7 +120,7 @@ export const compressAllOptions = (
   if (xs.length <= 8) {
     return uncompressed(xs).then(x => [x])
   }
-  const ns = Int32.maybeArray(xs)
+  const ns = canDeltaCompress(xs)
   const uncompressedResult = uncompressed(xs)
   const variants = ns
     ? forceDelta

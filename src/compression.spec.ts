@@ -28,6 +28,7 @@ const sampleBits = 9
 describe('overall compression', () => {
   const n = 100000
   const rows = Array.from({ length: n }, createSample)
+  console.log(rows.slice(0, 1))
   it('should be reversible', () => {
     expect(roundtrip(rows)).toEqual(rows)
   })
