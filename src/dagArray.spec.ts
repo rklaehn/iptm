@@ -1,5 +1,6 @@
 // tslint:disable:no-if-statement no-object-mutation no-expression-statement no-shadowed-variable readonly-array
 // tslint:disable:array-type no-delete no-let no-console
+import * as seedrandom from 'seedrandom'
 import { compressAllOptions, DagArray, fromDelta, toDelta } from './dagArray'
 
 describe('toDelta/fromDelta', () => {
@@ -50,6 +51,22 @@ describe('DagArray', () => {
           .then(_ => _.map(_ => _.type))
           .then(x => x[0]),
       ).resolves.toEqual('delta-deflate'))
+
+    it('should have better compression when using delta compression for linear sequences', () => {
+      const rnd = seedrandom('x')
+      const timestamps = Array.from(
+        { length: 1000 },
+        (_, i) => 1000000000 + Math.floor(rnd() * 10) + i * 1000,
+      )
+      console.log(timestamps)
+      expect(
+        compressAllOptions(timestamps).then(_ => _.map(({ size, type }) => ({ size, type }))),
+      ).resolves.toEqual([
+        { size: 821, type: 'delta-deflate' },
+        { size: 3381, type: 'deflate' },
+        { size: 5003, type: 'uncompressed' },
+      ])
+    })
 
     it('should not attempt non-delta compression if the forceDelta option is set', () =>
       expect(
