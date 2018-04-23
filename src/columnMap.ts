@@ -189,10 +189,14 @@ export const toColumnMap = <T>(rows: ReadonlyArray<T>): ColumnMap<T> => {
   return ColumnMapImpl.build<T>(rootStore)
 }
 
-export type ColumnMap<T> = {
-  values?: [ReadonlyArray<number>, ReadonlyArray<T>]
-  children?: { [key: string]: ColumnMap<T> }
-}
+export type TypedColumnMap<T> = T extends object
+  ? { children: { [K in keyof T]: TypedColumnMap<T[K]> } }
+  : { values: [number[], T[]] }
+
+export type ColumnMap<T> = Readonly<{
+  values?: [ReadonlyArray<number>, ReadonlyArray<any>]
+  children?: { [key: string]: ColumnMap<any> }
+}>
 export const ColumnMap = {
   compressedSize: getCompressedSize,
   compressedSizeDedup: getCompressedSizesDedup,

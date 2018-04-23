@@ -1,0 +1,7 @@
+I will present a technique to compress large quantities of sensor data to an immutable data structure that can be persisted and replicated on the interplanetary file system. The encoding scheme achieves extremely high compression ratios for typical sensor data, yet is lightweight enough to be used on IoT devices.
+
+You might ask what that has to do with programming languages. When I discovered functional programming many years ago I was blown away. In the course of my career I have been able to apply functional programming techniques to diverse and very interesting domains. I was able to solve complex problems without endangering the very expensive spacecraft I was entrusted with.
+
+However, with concepts such as microservices I feel like the walls are closing in. The island of purity at the core of a microservice is often not very large. You are constantly faced with challenges related to serialisation, and you lose much of the benefits of purity and types at the boundaries of your microservices. At some point you wonder why you even bother with immutability and types.
+
+The interplanetary file system offers a way out. Its core abstraction of content-addressed storage allows to implement persistent immutable data structures that span multiple machines. The presented data structure and compression scheme is an example for this approach.
