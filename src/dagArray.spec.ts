@@ -86,12 +86,12 @@ describe('DagArray', () => {
       )
       console.log(timestamps)
       console.log(JSON.stringify(timestamps).length)
-      expect(
+      return expect(
         compressAllOptions(timestamps).then(_ => _.map(({ size, type }) => ({ size, type }))),
       ).resolves.toEqual([
-        { size: 821, type: 'delta-deflate' },
-        { size: 3381, type: 'deflate' },
-        { size: 5003, type: 'uncompressed' },
+        { size: 672, type: 'delta-deflate' },
+        { size: 3502, type: 'deflate' },
+        { size: 9003, type: 'uncompressed' },
       ])
     })
 

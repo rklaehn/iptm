@@ -4,6 +4,8 @@ import * as shajs from 'sha.js'
 import { toCbor } from './cbor'
 import { CompressedArray, DagArray } from './dagArray'
 
+export type RA<T> = ReadonlyArray<T>
+
 type ColumnMapImpl<T> = {
   values: [Array<number>, Array<T>]
   children: { [key: string]: ColumnMapImpl<T> }
@@ -119,7 +121,7 @@ const isPrimitive = (key: any): boolean => {
   return true
 }
 
-const updateInPlace = (obj: any, path: ReadonlyArray<string>, from: number, value: any): any => {
+const updateInPlace = (obj: any, path: RA<string>, from: number, value: any): any => {
   if (from === path.length) {
     // at the end, just return the value and let the caller deal with storing it
     return value
@@ -140,7 +142,7 @@ const updateInPlace = (obj: any, path: ReadonlyArray<string>, from: number, valu
   }
 }
 
-export const fromColumnMap = <T>(columns: ColumnMap<T>): ReadonlyArray<T> => {
+export const fromColumnMap = <T>(columns: ColumnMap<T>): RA<T> => {
   const rows: any = {}
   // first position is placeholder for the current index
   const path: Array<any> = [undefined]
@@ -170,31 +172,112 @@ export const fromColumnMap = <T>(columns: ColumnMap<T>): ReadonlyArray<T> => {
   return Object.values(rows)
 }
 
-export const toColumnMap = <T>(rows: ReadonlyArray<T>): ColumnMap<T> => {
-  const rootStore: ColumnMapImpl<T> = ColumnMapImpl.empty()
-  const addToValuesAndIndices = (store: ColumnMapImpl<any>, obj: any, index: number): void => {
-    if (isPrimitive(obj)) {
-      store.values[0].push(index)
-      store.values[1].push(obj)
-    } else {
-      Object.entries(obj).forEach(([key, value]) => {
-        const childStore = getOrCreateInPlace(store, key)
-        addToValuesAndIndices(childStore, value, index)
-      })
-    }
+const addToValuesAndIndices = (store: ColumnMapImpl<any>, obj: any, index: number): void => {
+  if (isPrimitive(obj)) {
+    store.values[0].push(index)
+    store.values[1].push(obj)
+  } else {
+    Object.entries(obj).forEach(([key, value]) => {
+      const childStore = getOrCreateInPlace(store, key)
+      addToValuesAndIndices(childStore, value, index)
+    })
   }
+}
+
+export const toColumnMap = <T>(rows: RA<T>): ColumnMap<T> => {
+  const rootStore: ColumnMapImpl<T> = ColumnMapImpl.empty()
   rows.forEach((row, index) => {
     addToValuesAndIndices(rootStore, row, index)
   })
   return ColumnMapImpl.build<T>(rootStore)
 }
 
-export type TypedColumnMap<T> = T extends object
-  ? { children: { [K in keyof T]: TypedColumnMap<T[K]> } }
-  : { values: [number[], T[]] }
+export interface ColumnMapBuilder<T> {
+  add: (value: T) => void
+  build: () => ColumnMap<T>
+}
 
+export const ColumnMapBuilder = {
+  create: <T>(): ColumnMapBuilder<T> => {
+    const rootStore: ColumnMapImpl<T> = ColumnMapImpl.empty()
+    let index = 0
+    return {
+      add: (value: T): void => addToValuesAndIndices(rootStore, value, index++),
+      build: () => ColumnMapImpl.build<T>(rootStore),
+    }
+  },
+}
+
+// const pick = <T>(a: ColumnMap<T>, indices: number[]): ColumnMap<T> => {
+//   throw new Error()
+// }
+
+// @ts-ignore
+const concat = <T>(a: ColumnMap<T>, b: ColumnMap<T>): ColumnMap<T> => {
+  const offset = maxIndex(a, -1) + 1
+  const b1 = shiftIndices(b, offset)
+  return concat0(a, b1)
+}
+
+const concat0 = <T>(a: ColumnMap<T>, b: ColumnMap<T>): ColumnMap<T> => {
+  const av = a.values || [[], []]
+  const bv = b.values || [[], []]
+  const ac = a.children || {}
+  const bc = b.children || {}
+  const i1 = av[0].concat(bv[0])
+  const v1 = av[1].concat(bv[1])
+  const values: typeof a.values = i1.length > 0 ? [i1, v1] : undefined
+  const children: typeof a.children = { ...ac, ...bc }
+  const keys = Object.keys(children)
+  keys.forEach(key => {
+    const childa: ColumnMap<T> = ac[key]
+    const childb: ColumnMap<T> = bc[key]
+    if (childa && childb) {
+      children[key] = concat0(childa, childb)
+    }
+  })
+  return { values, children: keys.length > 0 ? children : undefined }
+}
+
+const shiftIndices = <T>(a: ColumnMap<T>, offset: number): ColumnMap<T> => {
+  const values: [RA<number>, RA<T>] | undefined = a.values
+    ? [a.values[0].map(x => x + offset), a.values[1]]
+    : undefined
+  const children = a.children
+    ? Object.entries(a.children).reduce(
+        (acc, [k, v]) => {
+          acc[k] = shiftIndices(v, offset)
+          return acc
+        },
+        {} as { [key: string]: ColumnMap<T> },
+      )
+    : undefined
+  return { values, children }
+}
+
+const maxIndex = (a: ColumnMap<any>, max: number): number => {
+  let currentMax = max
+  if (a.values) {
+    const indices = a.values[0]
+    if (indices.length > 0) {
+      currentMax = Math.max(currentMax, indices[indices.length - 1])
+    }
+  }
+  if (a.children) {
+    Object.values(a.children).forEach(child => {
+      currentMax = maxIndex(child, currentMax)
+    })
+  }
+  return currentMax
+}
+
+export type TypedColumnMap<T> = Readonly<
+  T extends object
+    ? { children: { [K in keyof T]: TypedColumnMap<T[K]> } }
+    : { values: [RA<number>, RA<T>] }
+>
 export type ColumnMap<T> = Readonly<{
-  values?: [ReadonlyArray<number>, ReadonlyArray<any>]
+  values?: [RA<number>, RA<any>]
   children?: { [key: string]: ColumnMap<any> }
 }>
 export const ColumnMap = {

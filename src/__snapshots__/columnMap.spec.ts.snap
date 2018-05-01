@@ -1,22 +1,274 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`builder/fromColumnMap should properly deal with missing values 1`] = `
+Object {
+  "children": Object {
+    "x": Object {
+      "values": Array [
+        Array [
+          1,
+        ],
+        Array [
+          2,
+        ],
+      ],
+    },
+    "y": Object {
+      "values": Array [
+        Array [
+          0,
+        ],
+        Array [
+          2,
+        ],
+      ],
+    },
+  },
+}
+`;
+
+exports[`builder/fromColumnMap should properly deal with nested objects 1`] = `
+Object {
+  "children": Object {
+    "data": Object {
+      "children": Object {
+        "reason": Object {
+          "values": Array [
+            Array [
+              1,
+            ],
+            Array [
+              "because",
+            ],
+          ],
+        },
+        "timestamp": Object {
+          "values": Array [
+            Array [
+              0,
+            ],
+            Array [
+              1,
+            ],
+          ],
+        },
+      },
+    },
+    "type": Object {
+      "values": Array [
+        Array [
+          0,
+          1,
+        ],
+        Array [
+          "start",
+          "stop",
+        ],
+      ],
+    },
+  },
+}
+`;
+
+exports[`builder/fromColumnMap should properly deal with weird javascript crap 1`] = `
+Object {
+  "children": Object {
+    "0": Object {
+      "values": Array [
+        Array [
+          1,
+        ],
+        Array [
+          1,
+        ],
+      ],
+    },
+    "1": Object {
+      "values": Array [
+        Array [
+          1,
+        ],
+        Array [
+          0,
+        ],
+      ],
+    },
+    "a": Object {
+      "values": Array [
+        Array [
+          0,
+        ],
+        Array [
+          1,
+        ],
+      ],
+    },
+    "b": Object {
+      "values": Array [
+        Array [
+          0,
+        ],
+        Array [
+          NaN,
+        ],
+      ],
+    },
+    "c": Object {
+      "values": Array [
+        Array [
+          0,
+        ],
+        Array [
+          Infinity,
+        ],
+      ],
+    },
+    "d": Object {
+      "values": Array [
+        Array [
+          0,
+        ],
+        Array [
+          -Infinity,
+        ],
+      ],
+    },
+    "false": Object {
+      "values": Array [
+        Array [
+          1,
+        ],
+        Array [
+          0,
+        ],
+      ],
+    },
+    "null": Object {
+      "values": Array [
+        Array [
+          1,
+        ],
+        Array [
+          1,
+        ],
+      ],
+    },
+    "true": Object {
+      "values": Array [
+        Array [
+          1,
+        ],
+        Array [
+          1,
+        ],
+      ],
+    },
+    "undefined": Object {
+      "values": Array [
+        Array [
+          1,
+        ],
+        Array [
+          false,
+        ],
+      ],
+    },
+    "w": Object {
+      "values": Array [
+        Array [
+          0,
+        ],
+        Array [
+          false,
+        ],
+      ],
+    },
+    "x": Object {
+      "values": Array [
+        Array [
+          0,
+        ],
+        Array [
+          undefined,
+        ],
+      ],
+    },
+    "y": Object {
+      "values": Array [
+        Array [
+          0,
+        ],
+        Array [
+          null,
+        ],
+      ],
+    },
+    "z": Object {
+      "values": Array [
+        Array [
+          0,
+        ],
+        Array [
+          true,
+        ],
+      ],
+    },
+  },
+}
+`;
+
+exports[`builder/fromColumnMap should work for normal time series data 1`] = `
+Object {
+  "children": Object {
+    "x": Object {
+      "values": Array [
+        Array [
+          0,
+          1,
+        ],
+        Array [
+          1,
+          2,
+        ],
+      ],
+    },
+    "y": Object {
+      "values": Array [
+        Array [
+          0,
+          1,
+        ],
+        Array [
+          2,
+          1,
+        ],
+      ],
+    },
+  },
+}
+`;
+
 exports[`toColumnMap/fromColumnMap should properly deal with missing values 1`] = `
 Object {
   "children": Object {
     "x": Object {
-      "indices": Array [
-        1,
-      ],
       "values": Array [
-        2,
+        Array [
+          1,
+        ],
+        Array [
+          2,
+        ],
       ],
     },
     "y": Object {
-      "indices": Array [
-        0,
-      ],
       "values": Array [
-        2,
+        Array [
+          0,
+        ],
+        Array [
+          2,
+        ],
       ],
     },
   },
@@ -29,31 +281,37 @@ Object {
     "data": Object {
       "children": Object {
         "reason": Object {
-          "indices": Array [
-            1,
-          ],
           "values": Array [
-            "because",
+            Array [
+              1,
+            ],
+            Array [
+              "because",
+            ],
           ],
         },
         "timestamp": Object {
-          "indices": Array [
-            0,
-          ],
           "values": Array [
-            1,
+            Array [
+              0,
+            ],
+            Array [
+              1,
+            ],
           ],
         },
       },
     },
     "type": Object {
-      "indices": Array [
-        0,
-        1,
-      ],
       "values": Array [
-        "start",
-        "stop",
+        Array [
+          0,
+          1,
+        ],
+        Array [
+          "start",
+          "stop",
+        ],
       ],
     },
   },
@@ -64,115 +322,143 @@ exports[`toColumnMap/fromColumnMap should properly deal with weird javascript cr
 Object {
   "children": Object {
     "0": Object {
-      "indices": Array [
-        1,
-      ],
       "values": Array [
-        1,
+        Array [
+          1,
+        ],
+        Array [
+          1,
+        ],
       ],
     },
     "1": Object {
-      "indices": Array [
-        1,
-      ],
       "values": Array [
-        0,
+        Array [
+          1,
+        ],
+        Array [
+          0,
+        ],
       ],
     },
     "a": Object {
-      "indices": Array [
-        0,
-      ],
       "values": Array [
-        1,
+        Array [
+          0,
+        ],
+        Array [
+          1,
+        ],
       ],
     },
     "b": Object {
-      "indices": Array [
-        0,
-      ],
       "values": Array [
-        NaN,
+        Array [
+          0,
+        ],
+        Array [
+          NaN,
+        ],
       ],
     },
     "c": Object {
-      "indices": Array [
-        0,
-      ],
       "values": Array [
-        Infinity,
+        Array [
+          0,
+        ],
+        Array [
+          Infinity,
+        ],
       ],
     },
     "d": Object {
-      "indices": Array [
-        0,
-      ],
       "values": Array [
-        -Infinity,
+        Array [
+          0,
+        ],
+        Array [
+          -Infinity,
+        ],
       ],
     },
     "false": Object {
-      "indices": Array [
-        1,
-      ],
       "values": Array [
-        0,
+        Array [
+          1,
+        ],
+        Array [
+          0,
+        ],
       ],
     },
     "null": Object {
-      "indices": Array [
-        1,
-      ],
       "values": Array [
-        1,
+        Array [
+          1,
+        ],
+        Array [
+          1,
+        ],
       ],
     },
     "true": Object {
-      "indices": Array [
-        1,
-      ],
       "values": Array [
-        1,
+        Array [
+          1,
+        ],
+        Array [
+          1,
+        ],
       ],
     },
     "undefined": Object {
-      "indices": Array [
-        1,
-      ],
       "values": Array [
-        false,
+        Array [
+          1,
+        ],
+        Array [
+          false,
+        ],
       ],
     },
     "w": Object {
-      "indices": Array [
-        0,
-      ],
       "values": Array [
-        false,
+        Array [
+          0,
+        ],
+        Array [
+          false,
+        ],
       ],
     },
     "x": Object {
-      "indices": Array [
-        0,
-      ],
       "values": Array [
-        undefined,
+        Array [
+          0,
+        ],
+        Array [
+          undefined,
+        ],
       ],
     },
     "y": Object {
-      "indices": Array [
-        0,
-      ],
       "values": Array [
-        null,
+        Array [
+          0,
+        ],
+        Array [
+          null,
+        ],
       ],
     },
     "z": Object {
-      "indices": Array [
-        0,
-      ],
       "values": Array [
-        true,
+        Array [
+          0,
+        ],
+        Array [
+          true,
+        ],
       ],
     },
   },
@@ -183,23 +469,275 @@ exports[`toColumnMap/fromColumnMap should work for normal time series data 1`] =
 Object {
   "children": Object {
     "x": Object {
-      "indices": Array [
-        0,
-        1,
-      ],
       "values": Array [
-        1,
-        2,
+        Array [
+          0,
+          1,
+        ],
+        Array [
+          1,
+          2,
+        ],
       ],
     },
     "y": Object {
-      "indices": Array [
-        0,
-        1,
-      ],
       "values": Array [
-        2,
-        1,
+        Array [
+          0,
+          1,
+        ],
+        Array [
+          2,
+          1,
+        ],
+      ],
+    },
+  },
+}
+`;
+
+exports[`toColumnMap/iterable should properly deal with missing values 1`] = `
+Object {
+  "children": Object {
+    "x": Object {
+      "values": Array [
+        Array [
+          1,
+        ],
+        Array [
+          2,
+        ],
+      ],
+    },
+    "y": Object {
+      "values": Array [
+        Array [
+          0,
+        ],
+        Array [
+          2,
+        ],
+      ],
+    },
+  },
+}
+`;
+
+exports[`toColumnMap/iterable should properly deal with nested objects 1`] = `
+Object {
+  "children": Object {
+    "data": Object {
+      "children": Object {
+        "reason": Object {
+          "values": Array [
+            Array [
+              1,
+            ],
+            Array [
+              "because",
+            ],
+          ],
+        },
+        "timestamp": Object {
+          "values": Array [
+            Array [
+              0,
+            ],
+            Array [
+              1,
+            ],
+          ],
+        },
+      },
+    },
+    "type": Object {
+      "values": Array [
+        Array [
+          0,
+          1,
+        ],
+        Array [
+          "start",
+          "stop",
+        ],
+      ],
+    },
+  },
+}
+`;
+
+exports[`toColumnMap/iterable should properly deal with weird javascript crap 1`] = `
+Object {
+  "children": Object {
+    "0": Object {
+      "values": Array [
+        Array [
+          1,
+        ],
+        Array [
+          1,
+        ],
+      ],
+    },
+    "1": Object {
+      "values": Array [
+        Array [
+          1,
+        ],
+        Array [
+          0,
+        ],
+      ],
+    },
+    "a": Object {
+      "values": Array [
+        Array [
+          0,
+        ],
+        Array [
+          1,
+        ],
+      ],
+    },
+    "b": Object {
+      "values": Array [
+        Array [
+          0,
+        ],
+        Array [
+          NaN,
+        ],
+      ],
+    },
+    "c": Object {
+      "values": Array [
+        Array [
+          0,
+        ],
+        Array [
+          Infinity,
+        ],
+      ],
+    },
+    "d": Object {
+      "values": Array [
+        Array [
+          0,
+        ],
+        Array [
+          -Infinity,
+        ],
+      ],
+    },
+    "false": Object {
+      "values": Array [
+        Array [
+          1,
+        ],
+        Array [
+          0,
+        ],
+      ],
+    },
+    "null": Object {
+      "values": Array [
+        Array [
+          1,
+        ],
+        Array [
+          1,
+        ],
+      ],
+    },
+    "true": Object {
+      "values": Array [
+        Array [
+          1,
+        ],
+        Array [
+          1,
+        ],
+      ],
+    },
+    "undefined": Object {
+      "values": Array [
+        Array [
+          1,
+        ],
+        Array [
+          false,
+        ],
+      ],
+    },
+    "w": Object {
+      "values": Array [
+        Array [
+          0,
+        ],
+        Array [
+          false,
+        ],
+      ],
+    },
+    "x": Object {
+      "values": Array [
+        Array [
+          0,
+        ],
+        Array [
+          undefined,
+        ],
+      ],
+    },
+    "y": Object {
+      "values": Array [
+        Array [
+          0,
+        ],
+        Array [
+          null,
+        ],
+      ],
+    },
+    "z": Object {
+      "values": Array [
+        Array [
+          0,
+        ],
+        Array [
+          true,
+        ],
+      ],
+    },
+  },
+}
+`;
+
+exports[`toColumnMap/iterable should work for normal time series data 1`] = `
+Object {
+  "children": Object {
+    "x": Object {
+      "values": Array [
+        Array [
+          0,
+          1,
+        ],
+        Array [
+          1,
+          2,
+        ],
+      ],
+    },
+    "y": Object {
+      "values": Array [
+        Array [
+          0,
+          1,
+        ],
+        Array [
+          2,
+          1,
+        ],
       ],
     },
   },
