@@ -1,4 +1,4 @@
-// tslint:disable no-let no-expression-statement
+// tslint:disable no-let no-expression-statement no-console
 import * as Benchmark from 'benchmark'
 import { ColumnMap, ColumnMapBuilder } from './columnMap'
 import { iterable } from './columnMapIterator'

@@ -70,10 +70,6 @@ const iterate0 = <T>(im: ColumnIteratorMap<T>, index: number, rs: ColumnIterator
   rs.value = result
 }
 
-export const iterable = <T>(value: ColumnMap<T>): Iterable<T> => ({
-  [Symbol.iterator]: () => iterator(value),
-})
-
 export const iterator = <T>(value: ColumnMap<T>): Iterator<T> => {
   const im = ColumnIteratorMap.of(value)
   let index: number = 0
@@ -95,3 +91,7 @@ export const iterator = <T>(value: ColumnMap<T>): Iterator<T> => {
     },
   }
 }
+
+export const iterable = <T>(value: ColumnMap<T>): Iterable<T> => ({
+  [Symbol.iterator]: () => iterator(value),
+})

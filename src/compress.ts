@@ -1,5 +1,5 @@
 // tslint:disable:no-if-statement no-expression-statement no-shadowed-variable readonly-array
-// tslint:disable:array-type no-console
+// tslint:disable:array-type no-console no-floating-promises
 import * as fs from 'fs'
 import { logCompression } from './logCompression'
 

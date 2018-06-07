@@ -1,5 +1,5 @@
 // tslint:disable:no-if-statement no-object-mutation no-expression-statement no-shadowed-variable readonly-array
-// tslint:disable:array-type no-delete no-let no-console
+// tslint:disable:array-type no-delete no-let no-console no-use-before-declare
 import * as shajs from 'sha.js'
 import { toCbor } from './cbor'
 import { CompressedArray, DagArray } from './dagArray'
@@ -96,8 +96,10 @@ const ColumnMapImpl = {
   build: stripInPlace,
 }
 
+const lookup = <V>(m: { [k: string]: V }, k: string): V | undefined => m[k]
+
 const getOrCreateInPlace = <T>(store: ColumnMapImpl<T>, key: string): ColumnMapImpl<T> => {
-  const result = store.children[key]
+  const result = lookup(store.children, key)
   if (result !== undefined) {
     return result
   } else {
@@ -208,15 +210,36 @@ export const ColumnMapBuilder = {
   },
 }
 
-// const pick = <T>(a: ColumnMap<T>, indices: number[]): ColumnMap<T> => {
-//   throw new Error()
-// }
+const maxIndex = (a: ColumnMap<any>, max: number): number => {
+  let currentMax = max
+  if (a.values) {
+    const indices = a.values[0]
+    if (indices.length > 0) {
+      currentMax = Math.max(currentMax, indices[indices.length - 1])
+    }
+  }
+  if (a.children) {
+    Object.values(a.children).forEach(child => {
+      currentMax = maxIndex(child, currentMax)
+    })
+  }
+  return currentMax
+}
 
-// @ts-ignore
-const concat = <T>(a: ColumnMap<T>, b: ColumnMap<T>): ColumnMap<T> => {
-  const offset = maxIndex(a, -1) + 1
-  const b1 = shiftIndices(b, offset)
-  return concat0(a, b1)
+const shiftIndices = <T>(a: ColumnMap<T>, offset: number): ColumnMap<T> => {
+  const values: [RA<number>, RA<T>] | undefined = a.values
+    ? [a.values[0].map(x => x + offset), a.values[1]]
+    : undefined
+  const children = a.children
+    ? Object.entries(a.children).reduce(
+        (acc, [k, v]) => {
+          acc[k] = shiftIndices(v, offset)
+          return acc
+        },
+        {} as { [key: string]: ColumnMap<T> },
+      )
+    : undefined
+  return { values, children }
 }
 
 const concat0 = <T>(a: ColumnMap<T>, b: ColumnMap<T>): ColumnMap<T> => {
@@ -239,36 +262,11 @@ const concat0 = <T>(a: ColumnMap<T>, b: ColumnMap<T>): ColumnMap<T> => {
   return { values, children: keys.length > 0 ? children : undefined }
 }
 
-const shiftIndices = <T>(a: ColumnMap<T>, offset: number): ColumnMap<T> => {
-  const values: [RA<number>, RA<T>] | undefined = a.values
-    ? [a.values[0].map(x => x + offset), a.values[1]]
-    : undefined
-  const children = a.children
-    ? Object.entries(a.children).reduce(
-        (acc, [k, v]) => {
-          acc[k] = shiftIndices(v, offset)
-          return acc
-        },
-        {} as { [key: string]: ColumnMap<T> },
-      )
-    : undefined
-  return { values, children }
-}
-
-const maxIndex = (a: ColumnMap<any>, max: number): number => {
-  let currentMax = max
-  if (a.values) {
-    const indices = a.values[0]
-    if (indices.length > 0) {
-      currentMax = Math.max(currentMax, indices[indices.length - 1])
-    }
-  }
-  if (a.children) {
-    Object.values(a.children).forEach(child => {
-      currentMax = maxIndex(child, currentMax)
-    })
-  }
-  return currentMax
+// @ts-ignore
+const concat = <T>(a: ColumnMap<T>, b: ColumnMap<T>): ColumnMap<T> => {
+  const offset = maxIndex(a, -1) + 1
+  const b1 = shiftIndices(b, offset)
+  return concat0(a, b1)
 }
 
 export type TypedColumnMap<T> = Readonly<

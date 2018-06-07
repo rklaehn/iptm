@@ -1,8 +1,7 @@
 // tslint:disable:no-if-statement no-object-mutation no-expression-statement no-shadowed-variable readonly-array
-// tslint:disable:array-type no-delete no-let no-console
+// tslint:disable:array-type no-delete no-let no-console prefer-for-of no-use-before-declare
 import * as zlib from 'zlib'
 import { fromCbor, toCbor } from './cbor'
-import { Int32 } from './int32'
 import { log } from './log'
 
 type CompressionOptions = {
@@ -93,11 +92,11 @@ const compare = (x: number, y: number): number => (x < y ? -1 : x > y ? 1 : 0)
 
 const canDeltaCompress = (xs: ReadonlyArray<any>): ReadonlyArray<number> | undefined => {
   if (xs.length <= 1) {
-    return
+    return undefined
   }
   for (let i = 0; i < xs.length; i++) {
     if (!Number.isInteger(xs[i])) {
-      return
+      return undefined
     }
   }
   const ns: ReadonlyArray<number> = xs
@@ -106,7 +105,7 @@ const canDeltaCompress = (xs: ReadonlyArray<any>): ReadonlyArray<number> | undef
     const x1 = ns[i + 1]
     const delta = x1 - x0
     if (delta + x0 !== x1) {
-      return
+      return undefined
     }
   }
   return ns
@@ -155,6 +154,9 @@ const arrayFromCbor = (buffer: Buffer) =>
     dag => (Array.isArray(dag) ? Promise.resolve(dag) : Promise.reject('not an array')),
   )
 
+const asNumberArray = (xs: ReadonlyArray<any>): ReadonlyArray<number> | undefined =>
+  xs.every(Number.isInteger) ? (xs as ReadonlyArray<number>) : undefined
+
 const decompressDagArray = (x: DagArray): Promise<ReadonlyArray<any>> => {
   if (Array.isArray(x)) {
     return Promise.resolve(x)
@@ -168,7 +170,7 @@ const decompressDagArray = (x: DagArray): Promise<ReadonlyArray<any>> => {
           return inflate(data)
             .then(arrayFromCbor)
             .then(xs => {
-              const ds = Int32.maybeArray(xs)
+              const ds = asNumberArray(xs)
               return ds === undefined
                 ? Promise.reject('not a number array')
                 : Promise.resolve(fromDelta(reference, ds))
