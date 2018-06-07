@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "es2017",
+    "skipLibCheck": true,
+    "strictPropertyInitialization": false,
+    "noEmit": true,
+    "sourceMap": true,
+    "outDir": "./lib",
+    "lib": ["dom", "es2017"],
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "declaration": true,
+    "moduleResolution": "node"
+  },
+  "include": ["./src/**/*", "./typings/*.d.ts"]
+}

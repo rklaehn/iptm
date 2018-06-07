@@ -2,6 +2,7 @@
 **/coverage
 
 npm-debug.log*
+lerna-debug.log*
 
 .vscode/
 *~
