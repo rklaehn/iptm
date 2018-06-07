@@ -1,10 +1,10 @@
 // tslint:disable:no-if-statement no-expression-statement no-shadowed-variable readonly-array
-// tslint:disable:array-type no-console
+// tslint:disable:array-type no-console// tslint:disable:array-type no-console no-floating-promises no-object-mutation no-let
 import * as fs from 'fs'
 import { deflate, toCbor, toColumnMap } from 'iptm'
 import { compressedSize, compressedSizeDedup } from './compressionDiag'
 
-export const logCompression = (rows: any[], bits: number, file: string) => {
+export const logCompression = (rows: any[], bits: number, file: string): Promise<void> => {
   const n = rows.length
   console.log(rows.slice(0, 100))
   const columns = toColumnMap(rows)
@@ -47,3 +47,19 @@ export const logCompression = (rows: any[], bits: number, file: string) => {
       ws.end()
     })
 }
+
+if (process.argv.length <= 2) {
+  console.log('yarn compress <json file>')
+  process.exit(1)
+}
+const arg = process.argv[2]
+const json = JSON.parse(fs.readFileSync(arg, 'utf8'))
+
+if (!Array.isArray(json)) {
+  console.log('must be array!')
+  process.exit(2)
+}
+
+const rows: any[] = json
+const target = process.argv[3] || 'out.csv'
+logCompression(rows, -1, target)

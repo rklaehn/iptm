@@ -27,7 +27,7 @@ const getBufferForSizing = (x: DagArray): Promise<Buffer> => {
   if (Array.isArray(x)) {
     return toCbor(x)
   } else {
-    const ca = x as CompressedArray
+    const ca: CompressedArray = x as any
     // not exactly accurate, since we would have to add the
     // compression type and reference in case of delta compression.
     // also, we assume that cbor dag will store a buffer without overhead
