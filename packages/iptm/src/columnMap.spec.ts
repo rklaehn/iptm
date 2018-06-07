@@ -46,6 +46,33 @@ const columnMapTest = (name: string, roundtrip: <T>(rows: RA<T>) => RA<T>) =>
       expect(ColumnMap.of(rows)).toMatchSnapshot()
       expect(roundtrip(rows)).toEqual(rows)
     })
+
+    it('should not support function values', () => {
+      const rows = [
+        {
+          x: (x: string) => x,
+        },
+      ]
+      expect(() => ColumnMap.of(rows)).toThrow()
+    })
+
+    it('should not allow converting invalid column maps to array', () => {
+      const cols = {
+        children: {
+          line: {
+            values: [[0, 1], ['t800']],
+          },
+        },
+      }
+      expect(() => ColumnMap.toArray(cols)).toThrow()
+    })
+
+    it('should support concatenation', () => {
+      const rows = [{ x: 1, y: 2 }, { x: 2, y: 1 }]
+      const a = ColumnMap.of(rows)
+      const b = ColumnMap.of(rows)
+      expect(ColumnMap.toArray(ColumnMap.concat(a, b))).toEqual(rows.concat(rows))
+    })
   })
 
 const fromToRoundtrip = <T>(rows: RA<T>): RA<T> => ColumnMap.toArray(ColumnMap.of(rows))

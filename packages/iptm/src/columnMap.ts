@@ -1,6 +1,6 @@
 // #region impl
 // tslint:disable:no-if-statement no-expression-statement no-object-mutation
-// tslint:disable:readonly-array array-type no-delete no-let
+// tslint:disable:readonly-array array-type no-delete no-let no-use-before-declare
 type ColumnMapImpl<T> = {
   values: [Array<number>, Array<T>]
   children: { [key: string]: ColumnMapImpl<T> }
