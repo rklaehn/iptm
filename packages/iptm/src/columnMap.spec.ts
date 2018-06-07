@@ -1,20 +1,19 @@
 // tslint:disable:readonly-array no-expression-statement
-import { ColumnMapBuilder, fromColumnMap, RA, toColumnMap } from './columnMap'
-import { iterable } from './columnMapIterator'
+import { ColumnMap, RA } from './columnMap'
 
 const columnMapTest = (name: string, roundtrip: <T>(rows: RA<T>) => RA<T>) =>
   describe(name, () => {
     it('should work for normal time series data', () => {
       const rows = [{ x: 1, y: 2 }, { x: 2, y: 1 }]
 
-      expect(toColumnMap(rows)).toMatchSnapshot()
+      expect(ColumnMap.of(rows)).toMatchSnapshot()
       expect(roundtrip(rows)).toEqual(rows)
     })
 
     it('should properly deal with missing values', () => {
       const rows = [{ y: 2 }, { x: 2 }]
 
-      expect(toColumnMap(rows)).toMatchSnapshot()
+      expect(ColumnMap.of(rows)).toMatchSnapshot()
       expect(roundtrip(rows)).toEqual(rows)
     })
 
@@ -24,7 +23,7 @@ const columnMapTest = (name: string, roundtrip: <T>(rows: RA<T>) => RA<T>) =>
         { type: 'stop', data: { reason: 'because' } },
       ]
 
-      expect(toColumnMap(rows)).toMatchSnapshot()
+      expect(ColumnMap.of(rows)).toMatchSnapshot()
       expect(roundtrip(rows)).toEqual(rows)
     })
 
@@ -44,20 +43,22 @@ const columnMapTest = (name: string, roundtrip: <T>(rows: RA<T>) => RA<T>) =>
         // unusual values as keys
         { true: 1, false: 0, 1: 0, 0: 1, undefined: false, null: 1 },
       ]
-      expect(toColumnMap(rows)).toMatchSnapshot()
+      expect(ColumnMap.of(rows)).toMatchSnapshot()
       expect(roundtrip(rows)).toEqual(rows)
     })
   })
 
-const fromToRoundtrip = <T>(rows: RA<T>): RA<T> => fromColumnMap(toColumnMap(rows))
+const fromToRoundtrip = <T>(rows: RA<T>): RA<T> => ColumnMap.toArray(ColumnMap.of(rows))
 
-const iterableRoundtrip = <T>(rows: RA<T>): RA<T> => [...iterable<T>(toColumnMap<T>(rows))]
+const iterableRoundtrip = <T>(rows: RA<T>): RA<T> => [
+  ...ColumnMap.iterable<T>(ColumnMap.of<T>(rows)),
+]
 
 const builderRoundtrip = <T>(rows: RA<T>): RA<T> => {
-  const builder = ColumnMapBuilder.create()
+  const builder = ColumnMap.builder()
   rows.forEach(builder.add)
   const cm = builder.build()
-  return fromColumnMap(cm)
+  return ColumnMap.toArray(cm)
 }
 
 columnMapTest('toColumnMap/fromColumnMap', fromToRoundtrip)

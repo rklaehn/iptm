@@ -1,3 +1,0 @@
-Rüdiger Klaehn is working at Actyx, where he is developing an ipfs based platform for industrial applications in manufacturing. Before joining Actyx, Rüdiger has been working in the European space industry. He was responsible for implementing the telemetry archive for the Columbus module of the international space station. He also developed algorithms and functional data structures for the mission planning system of the TerraSAR/TanDEM earth observation mission. He has contributed to the collections library of the Scala language as well as the spire algebra library.
-
-Rüdiger loves functional data structures and currently has a lot of fun implementing such data structures in ipfs.

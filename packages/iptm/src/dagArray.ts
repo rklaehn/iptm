@@ -1,8 +1,8 @@
+// #region impl
 // tslint:disable:no-if-statement no-object-mutation no-expression-statement no-shadowed-variable readonly-array
 // tslint:disable:array-type no-delete no-let no-console prefer-for-of no-use-before-declare
 import * as zlib from 'zlib'
 import { fromCbor, toCbor } from './cbor'
-import { log } from './log'
 
 type CompressionOptions = {
   forceDelta: boolean
@@ -30,10 +30,8 @@ export const deflate = (b: Buffer): Promise<Buffer> =>
   new Promise((resolve, reject) => {
     zlib.deflateRaw(b, (err, buffer) => {
       if (err !== null) {
-        log.compress.error('deflate', b.toString('hex'), err)
         reject(err)
       } else {
-        // log.compress.info('deflate', b.toString('hex'), buffer.toString('hex'))
         resolve(buffer)
       }
     })
@@ -42,10 +40,8 @@ export const inflate = (b: Buffer): Promise<Buffer> =>
   new Promise((resolve, reject) => {
     zlib.inflateRaw(b, (err, buffer) => {
       if (err !== null) {
-        log.compress.error('inflate', b.toString('hex'), err)
         reject(err)
       } else {
-        // log.compress.info('inflate', b.toString('hex'), buffer.toString('hex'))
         resolve(buffer)
       }
     })
@@ -139,10 +135,8 @@ const getCompressionInfo = (
 ): Promise<ReadonlyArray<CompressionInfo>> =>
   compressAllOptions(xs, options).then(rs => rs.map(r => ({ size: r.size, type: r.type })))
 
-const getCompressedSizeA = (
-  xs: ReadonlyArray<any>,
-  options?: CompressionOptions,
-): Promise<number> => getCompressionInfo(xs, options).then(x => x[0].size)
+const getCompressedSize = (xs: ReadonlyArray<any>, options?: CompressionOptions): Promise<number> =>
+  getCompressionInfo(xs, options).then(x => x[0].size)
 
 const compressBestOption = (
   xs: ReadonlyArray<any>,
@@ -182,7 +176,7 @@ const decompressDagArray = (x: DagArray): Promise<ReadonlyArray<any>> => {
     }
   }
 }
-
+// #endregion
 export type CompressionType = 'deflate'
 export type CompressedArray = {
   c: CompressionType // compression type
@@ -194,5 +188,5 @@ export const DagArray = {
   compress: compressBestOption,
   decompress: decompressDagArray,
   getCompressionInfo,
-  getCompressedSize: getCompressedSizeA,
+  getCompressedSize,
 }
