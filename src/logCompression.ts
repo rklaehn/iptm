@@ -41,7 +41,7 @@ export const logCompression = (rows: any[], bits: number, file: string) => {
       write('Compressed columns        \t', colSize, '\t', colSize / n)
       write('Compressed columns (dedup)\t', colSizeDedup, '\t', colSizeDedup / n)
       if (bits > 0) {
-        write('Theoretical optimum       \t', n * bits / 8, '\t', bits / 8)
+        write('Theoretical optimum       \t', (n * bits) / 8, '\t', bits / 8)
       }
     })
     .then(() => {

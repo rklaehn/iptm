@@ -26,26 +26,26 @@
     "compress": "ts-node ./src/compress.ts"
   },
   "devDependencies": {
+    "@types/benchmark": "^1.0.31",
     "@types/jest": "^22.2.3",
     "@types/seedrandom": "^2.4.27",
-    "@types/benchmark": "^1.0.31",
-    "jest": "^22.4.2",
-    "prettier": "^1.12.1",
+    "benchmark": "^2.1.4",
+    "jest": "^22.4.4",
+    "prettier": "^1.13.4",
     "seedrandom": "^2.4.3",
     "sha.js": "^2.4.11",
-    "ts-jest": "^22.4.4",
-    "tslint": "^5.9.1",
-    "tslint-config-prettier": "^1.12.0",
+    "ts-jest": "^22.4.6",
+    "tslint": "^5.10.0",
+    "tslint-config-prettier": "^1.13.0",
     "tslint-config-standard": "^7.0.0",
     "tslint-immutable": "^4.5.4",
     "tslint-plugin-prettier": "^1.3.0",
-    "typescript": "^2.8.3",
-    "benchmark": "^2.1.4"
+    "typescript": "^2.9.1"
   },
   "dependencies": {
-    "@types/lru-cache": "^4.1.0",
+    "@types/lru-cache": "^4.1.1",
     "@types/node": "^10.3.1",
-    "fp-ts": "^1.3.0",
+    "fp-ts": "^1.6.2",
     "ipld-dag-cbor": "^0.12.0",
     "zlib": "^1.0.5"
   }
