@@ -1,9 +1,8 @@
 // tslint:disable:no-if-statement no-expression-statement no-shadowed-variable readonly-array
 // tslint:disable:array-type no-console
 import * as fs from 'fs'
-import { toCbor } from 'iptm'
-import { ColumnMap, toColumnMap } from 'iptm'
-import { deflate } from 'iptm'
+import { deflate, toCbor, toColumnMap } from 'iptm'
+import { compressedSize, compressedSizeDedup } from './compressionDiag'
 
 export const logCompression = (rows: any[], bits: number, file: string) => {
   const n = rows.length
@@ -12,8 +11,8 @@ export const logCompression = (rows: any[], bits: number, file: string) => {
   console.log(columns)
   const text = JSON.stringify(rows)
   const compressed = deflate(new Buffer(text)).then(x => x.length)
-  const colSize = ColumnMap.compressedSize(columns)
-  const colSizeDedup = ColumnMap.compressedSizeDedup(columns)
+  const colSize = compressedSize(columns)
+  const colSizeDedup = compressedSizeDedup(columns)
   const cbor = toCbor(rows).then(x => x.length)
   const cborDeflate = toCbor(rows)
     .then(deflate)

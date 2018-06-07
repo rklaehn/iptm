@@ -1,9 +1,10 @@
 // tslint:disable:no-if-statement no-expression-statement no-shadowed-variable readonly-array
 // tslint:disable:array-type no-console
-import { fromColumnMap, toColumnMap } from './columnMap'
+import { ColumnMap } from 'iptm'
 import { logCompression } from './logCompression'
 
-const roundtrip = <T>(rows: ReadonlyArray<T>): ReadonlyArray<T> => fromColumnMap(toColumnMap(rows))
+const roundtrip = <T>(rows: ReadonlyArray<T>): ReadonlyArray<T> =>
+  ColumnMap.toArray(ColumnMap.of(rows))
 const rand = (n: number): number => {
   if (n <= 0 || !Number.isSafeInteger(n)) {
     throw new Error()

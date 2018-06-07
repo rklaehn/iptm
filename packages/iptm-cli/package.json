@@ -21,7 +21,8 @@
     "test:watch": "jest --config jest.json --watch --coverage false",
     "test:prod": "npm run test -- --coverage",
     "tsc": "tsc -p ./tsconfig.json",
-    "tsc:watch": "npm run tsc -- --watch --pretty"
+    "tsc:watch": "npm run tsc -- --watch --pretty",
+    "benchmark": "ts-node ./src/columnMap.benchmark.ts"
   },
   "devDependencies": {
     "@types/benchmark": "^1.0.31",

@@ -21,6 +21,5 @@
     "declaration": true,
     "moduleResolution": "node"
   },
-  "include": ["./src/**/*", "./typings/*.d.ts"],
-  "exclude": ["src/**/*.spec.ts"]
+  "include": ["./src/**/*", "./typings/*.d.ts"]
 }

@@ -1,11 +1,6 @@
-// tslint:disable:no-if-statement no-object-mutation no-expression-statement no-shadowed-variable readonly-array
-// tslint:disable:array-type no-delete no-let no-console no-use-before-declare
-import * as shajs from 'sha.js'
-import { toCbor } from './cbor'
-import { CompressedArray, DagArray } from './dagArray'
-
-export type RA<T> = ReadonlyArray<T>
-
+// #region impl
+// tslint:disable:no-if-statement no-expression-statement no-object-mutation
+// tslint:disable:readonly-array array-type no-delete no-let
 type ColumnMapImpl<T> = {
   values: [Array<number>, Array<T>]
   children: { [key: string]: ColumnMapImpl<T> }
@@ -22,63 +17,6 @@ const stripInPlace = <T>(store: ColumnMapImpl<T>): ColumnMap<T> => {
   }
   return store
 }
-const getCompressedSize = async (m: ColumnMap<any>): Promise<number> => {
-  let result = 0
-  if (m.values !== undefined) {
-    // enable delta compression for indices
-    result += await DagArray.getCompressedSize(m.values[0], { forceDelta: true })
-    // let the compressor figure out if delta compression makes sense
-    result += await DagArray.getCompressedSize(m.values[1])
-  }
-  if (m.children !== undefined) {
-    for (const child of Object.values(m.children)) {
-      result += await getCompressedSize(child)
-    }
-  }
-  return result
-}
-const sha1 = (buffer: Buffer): string => {
-  return shajs('sha1')
-    .update(buffer.toString('hex'))
-    .digest('hex')
-}
-const getBufferForSizing = (x: DagArray): Promise<Buffer> => {
-  if (Array.isArray(x)) {
-    return toCbor(x)
-  } else {
-    const ca = x as CompressedArray
-    // not exactly accurate, since we would have to add the
-    // compression type and reference in case of delta compression.
-    // also, we assume that cbor dag will store a buffer without overhead
-    // (no base64 or anything)
-    return Promise.resolve(ca.d)
-  }
-}
-const compressedSizeDedupImpl = async (
-  m: ColumnMap<any>,
-  sizes: { [key: string]: number },
-): Promise<{ [key: string]: number }> => {
-  if (m.values !== undefined) {
-    // enable delta compression for indices
-    const indices = await DagArray.compress(m.values[0], { forceDelta: true })
-    const values = await DagArray.compress(m.values[1])
-    const ib = await getBufferForSizing(indices)
-    const vb = await getBufferForSizing(values)
-    sizes[sha1(ib)] = ib.length
-    sizes[sha1(vb)] = vb.length
-  }
-  if (m.children !== undefined) {
-    for (const child of Object.values(m.children)) {
-      await compressedSizeDedupImpl(child, sizes)
-    }
-  }
-  return sizes
-}
-const getCompressedSizesDedup = (m: ColumnMap<any>): Promise<number> =>
-  compressedSizeDedupImpl(m, {}).then(sizes => {
-    console.log(sizes)
-    return Object.values(sizes).reduce((x, y) => x + y, 0)
-  })
 
 const ColumnMapImpl = {
   /**
@@ -194,22 +132,6 @@ export const toColumnMap = <T>(rows: RA<T>): ColumnMap<T> => {
   return ColumnMapImpl.build<T>(rootStore)
 }
 
-export interface ColumnMapBuilder<T> {
-  add: (value: T) => void
-  build: () => ColumnMap<T>
-}
-
-export const ColumnMapBuilder = {
-  create: <T>(): ColumnMapBuilder<T> => {
-    const rootStore: ColumnMapImpl<T> = ColumnMapImpl.empty()
-    let index = 0
-    return {
-      add: (value: T): void => addToValuesAndIndices(rootStore, value, index++),
-      build: () => ColumnMapImpl.build<T>(rootStore),
-    }
-  },
-}
-
 const maxIndex = (a: ColumnMap<any>, max: number): number => {
   let currentMax = max
   if (a.values) {
@@ -269,18 +191,124 @@ const concat = <T>(a: ColumnMap<T>, b: ColumnMap<T>): ColumnMap<T> => {
   return concat0(a, b1)
 }
 
-export type TypedColumnMap<T> = Readonly<
-  T extends object
-    ? { children: { [K in keyof T]: TypedColumnMap<T[K]> } }
-    : { values: [RA<number>, RA<T>] }
->
+type ColumnIteratorResult = {
+  value: any
+  hasValue: boolean
+}
+
+type ColumnIterator = {
+  next: (index: number, r: ColumnIteratorResult) => void
+}
+
+const ColumnIterator = {
+  of: (values: [RA<number>, RA<any>]): ColumnIterator => {
+    let current = 0
+    const [is, vs] = values
+    return {
+      next: (index: number, r: ColumnIteratorResult): void => {
+        while (current < is.length && is[current] < index) {
+          current++
+        }
+        const hasValue = is[current] === index
+        r.hasValue = hasValue
+        r.value = hasValue ? vs[current] : undefined
+      },
+    }
+  },
+}
+
+type ColumnIteratorMap<T> = Readonly<{
+  values?: ColumnIterator
+  children?: { [key: string]: ColumnIteratorMap<any> }
+}>
+
+const ColumnIteratorMap = {
+  of: <T>(m: ColumnMap<T>): ColumnIteratorMap<T> => {
+    const values = m.values !== undefined ? ColumnIterator.of(m.values) : undefined
+    if (m.children === undefined) {
+      return { values }
+    } else {
+      const children: { [key: string]: ColumnIteratorMap<any> } = {}
+      Object.entries(m.children).forEach(([key, value]) => {
+        children[key] = ColumnIteratorMap.of(value)
+      })
+      return { values, children }
+    }
+  },
+}
+
+const iterate0 = <T>(im: ColumnIteratorMap<T>, index: number, rs: ColumnIteratorResult): void => {
+  if (im.values) {
+    im.values.next(index, rs)
+    if (rs.hasValue) {
+      return
+    }
+  }
+  let result: any
+  if (im.children) {
+    Object.entries(im.children).forEach(([key, value]) => {
+      iterate0(value, index, rs)
+      if (rs.hasValue) {
+        if (result === undefined) {
+          result = {}
+        }
+        result[key] = rs.value
+      }
+    })
+  }
+  rs.hasValue = result !== undefined
+  rs.value = result
+}
+
+const iterator = <T>(value: ColumnMap<T>): Iterator<T> => {
+  const im = ColumnIteratorMap.of(value)
+  let index: number = 0
+  const rs: ColumnIteratorResult = {
+    hasValue: false,
+    value: undefined,
+  }
+  return {
+    next: (): IteratorResult<T> => {
+      iterate0(im, index, rs)
+      if (rs.hasValue) {
+        index += 1
+        return { value: rs.value, done: false }
+      } else {
+        // from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols
+        // value - any JavaScript value returned by the iterator. Can be omitted when done is true.
+        return { done: true } as any
+      }
+    },
+  }
+}
+
+const builder = <T>(): ColumnMapBuilder<T> => {
+  const rootStore: ColumnMapImpl<T> = ColumnMapImpl.empty()
+  let index = 0
+  return {
+    add: (value: T): void => addToValuesAndIndices(rootStore, value, index++),
+    build: () => ColumnMapImpl.build<T>(rootStore),
+  }
+}
+
+const iterable = <T>(value: ColumnMap<T>): Iterable<T> => ({
+  [Symbol.iterator]: () => iterator(value),
+})
+// #endregion
+export type RA<T> = ReadonlyArray<T>
 export type ColumnMap<T> = Readonly<{
   values?: [RA<number>, RA<any>]
   children?: { [key: string]: ColumnMap<any> }
 }>
+export interface ColumnMapBuilder<T> {
+  add: (value: T) => void
+  build: () => ColumnMap<T>
+}
 export const ColumnMap = {
-  compressedSize: getCompressedSize,
-  compressedSizeDedup: getCompressedSizesDedup,
   of: toColumnMap,
   toArray: fromColumnMap,
+  concat,
+  iterable,
+  iterator,
+  builder,
 }
