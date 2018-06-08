@@ -27,18 +27,31 @@ const stringToBuffer = (x: DagArray): DagArray => {
   return ca
 }
 
+export type CompressionStats = Readonly<{
+  size: number
+  blocks: number
+}>
+
+export type CompressionResult<T> = Readonly<{
+  link: Link<ColumnIndex<T>>
+  stats: CompressionStats
+}>
+
 export const compressAndStore = <T>(dagPut: DagPut) => (
   data: ColumnMap<T>,
-): Promise<Link<ColumnIndex<T>>> => {
+): Promise<CompressionResult<T>> => {
+  const blockMap: { [key: string]: number } = {}
   const toIndex = async (m: ColumnMap<any>): Promise<ColumnIndex<any>> => {
     let result: ColumnIndex<any> = {}
     const children: any = {}
     if (m.values !== undefined) {
-      const ic = await DagArray.compress(m.values[0])
-      const vc = await DagArray.compress(m.values[1])
-      const i = await dagPut(bufferToString(ic))
-      const v = await dagPut(bufferToString(vc))
-      result = { values: [i, v] }
+      const compressedIndices = await DagArray.compress(m.values[0])
+      const compressedValues = await DagArray.compress(m.values[1])
+      const indexLink = await dagPut(bufferToString(compressedIndices))
+      const valueLink = await dagPut(bufferToString(compressedValues))
+      blockMap[indexLink['/']] = await DagArray.cborSize(compressedIndices)
+      blockMap[valueLink['/']] = await DagArray.cborSize(compressedValues)
+      result = { values: [indexLink, valueLink] }
     }
     if (m.children !== undefined) {
       for (const [key, child] of Object.entries(m.children)) {
@@ -50,7 +63,20 @@ export const compressAndStore = <T>(dagPut: DagPut) => (
     }
     return result
   }
-  return toIndex(data).then(index => dagPut(index))
+  return toIndex(data)
+    .then(index => dagPut(index))
+    .then<CompressionResult<T>>(link => {
+      const values = Object.values(blockMap)
+      const size = values.reduce((x, y) => x + y, 0)
+      const blocks = values.length
+      return {
+        link,
+        stats: {
+          size,
+          blocks,
+        },
+      }
+    })
 }
 
 export const loadAndDecompress = <T>(dagGet: DagGet) => (

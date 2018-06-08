@@ -13,9 +13,9 @@ const rand = (n: number): number => {
 }
 
 const createSample = (_: any, i: number) => ({
-  semantics: 'someFish', // constant
-  name: 'fish1', // constant
-  sourceId: 'asafjsiodfuhgildkh', // constant
+  group: 'group1', // constant
+  name: 'parameter1', // constant
+  source: 'sensorxyz', // constant
   sequence: i + 1, // regular => constant
   timestamp: i * 1000 + rand(16), // 4 bits
   payload: {

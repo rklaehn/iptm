@@ -1,50 +1,76 @@
-// tslint:disable no-if-statement no-expression-statement no-shadowed-variable readonly-array
-// tslint:disable array-type no-console no-floating-promises no-object-mutation no-let
-// tslint:disable no-expression-statement no-object-mutation
+// tslint:disable
+// tslint:enable prettier
+import * as commander from 'commander'
 import * as fs from 'fs'
 import { ColumnMap } from 'iptm'
-import { dagPut } from './dagApi'
+import { DagApi } from './dagApi'
 import { compressAndStore } from './encodeDecode'
 
-if (process.argv.length <= 2) {
-  console.log('npm run compress <json file>')
-  process.exit(1)
+// copied from https://github.com/sindresorhus/get-stdin
+const stdinToBuffer = (): Promise<Buffer> => {
+  const { stdin } = process
+  const ret: any[] = []
+  let len = 0
+
+  return new Promise(resolve => {
+    if (stdin.isTTY) {
+      console.log('interactive input not supported')
+      args.outputHelp()
+      process.exit(3)
+    }
+
+    stdin.on('readable', () => {
+      let chunk
+
+      while ((chunk = stdin.read())) {
+        ret.push(chunk)
+        len += chunk.length
+      }
+    })
+
+    stdin.on('end', () => {
+      resolve(Buffer.concat(ret, len))
+    })
+  })
 }
-const arg = process.argv[2]
-const json = JSON.parse(fs.readFileSync(arg, 'utf8'))
 
-if (!Array.isArray(json)) {
-  console.log('must be array!')
-  process.exit(2)
-}
+const args = commander
+  .description(
+    'Compresses an arbitrary JSON array and stores it in IPFS.\n' +
+      'File can be passed as an argument or via stdin',
+  )
+  .usage('compress [options] <json file>')
+  .option('-v, --verbose', 'logs compression statistics')
+  .option(
+    '--api <string>',
+    'ipfs api to use. defaults to http://localhost:5001. No trailing slashes!',
+  )
+  .parse(process.argv)
 
-const columns = ColumnMap.of(json)
-// const rand = (n: number): number => {
-//   if (n <= 0 || !Number.isSafeInteger(n)) {
-//     throw new Error()
-//   }
-//   return Math.floor(Math.random() * n)
-// }
-//
-// const createSample = (_: any, i: number) => ({
-//   semantics: 'someFish', // constant
-//   name: 'fish1', // constant
-//   sourceId: 'asafjsiodfuhgildkh', // constant
-//   sequence: i + 1, // regular => constant
-//   timestamp: i * 1000 + rand(16), // 4 bits
-//   payload: {
-//     type: 'sample', // constant
-//     value: rand(16), // 4 bits
-//     status: rand(2) === 0, // 1 bit
-//   },
-// })
-// const testData = Array.from({ length: 100000 }).map(createSample)
-// fs.writeFileSync('test.json', JSON.stringify(testData))
+const verbose: boolean = args.verbose || true
+const api: string | undefined = args.api
+const dagApi = DagApi.of(api)
 
-compressAndStore(dagPut)(columns).then(res => {
-  console.log(res['/'])
-  // return loadAndDecompress(dagGet)(res).then(columns1 => {
-  //   const rows = ColumnMap.toArray(columns1)
-  //   console.log(JSON.stringify(rows))
-  // })
+const bufferP =
+  args.args.length === 0 ? stdinToBuffer() : Promise.resolve(fs.readFileSync(args.args[0]))
+
+bufferP.then(buffer => {
+  const text = buffer.toString('utf8')
+  const json = JSON.parse(text)
+
+  if (!Array.isArray(json)) {
+    console.log('must be array!')
+    process.exit(2)
+  }
+
+  const columns = ColumnMap.of(json)
+
+  return compressAndStore(dagApi.put)(columns).then(result => {
+    if (verbose) {
+      console.log('Input size      ', buffer.length)
+      console.log('Compressed size ', result.stats.size)
+      console.log('IPFS dag objects', result.stats.blocks)
+    }
+    console.log(result.link['/'])
+  })
 })

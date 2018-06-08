@@ -138,6 +138,19 @@ const getCompressionInfo = (
 const getCompressedSize = (xs: ReadonlyArray<any>, options?: CompressionOptions): Promise<number> =>
   getCompressionInfo(xs, options).then(x => x[0].size)
 
+const fold = <T>(da: DagArray) => (
+  onCompressedArray: (ca: CompressedArray) => T,
+  onRawArray: (xs: ReadonlyArray<any>) => T,
+): T => (Array.isArray(da) ? onRawArray(da as any) : onCompressedArray(da as any))
+
+const cborSize = (da: DagArray): Promise<number> =>
+  DagArray.fold<Promise<number>>(da)(
+    // rough estimate of the cbored length without having to actually convert to cbor
+    compressed => Promise.resolve(compressed.d.length + compressed.c.length + 2),
+    // for a raw array, just convert to cbor since that is what ipfs will do
+    raw => toCbor(raw).then(x => x.length),
+  )
+
 const compressBestOption = (
   xs: ReadonlyArray<any>,
   options?: CompressionOptions,
@@ -189,4 +202,6 @@ export const DagArray = {
   decompress: decompressDagArray,
   getCompressionInfo,
   getCompressedSize,
+  fold,
+  cborSize,
 }
