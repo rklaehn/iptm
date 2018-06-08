@@ -40,14 +40,14 @@ const args = commander
       'File can be passed as an argument or via stdin',
   )
   .usage('compress [options] <json file>')
-  .option('-v, --verbose', 'logs compression statistics')
+  .option('-v, --verbose', 'verbosity level', (_v, total) => total + 1, 0)
   .option(
     '--api <string>',
     'ipfs api to use. defaults to http://localhost:5001. No trailing slashes!',
   )
   .parse(process.argv)
 
-const verbose: boolean = args.verbose || true
+const verbose = args.verbose || 0
 const api: string | undefined = args.api
 const dagApi = DagApi.of(api)
 
@@ -66,9 +66,10 @@ bufferP.then(buffer => {
   const columns = ColumnMap.of(json)
 
   return compressAndStore(dagApi.put)(columns).then(result => {
-    if (verbose) {
+    if (verbose > 0) {
       console.log('Input size      ', buffer.length)
       console.log('Compressed size ', result.stats.size)
+      console.log('Ratio           ', (buffer.length / result.stats.size).toFixed(2))
       console.log('IPFS dag objects', result.stats.blocks)
     }
     console.log(result.link['/'])
