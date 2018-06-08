@@ -1,18 +1,40 @@
-// tslint:disable no-if-statement no-expression-statement no-shadowed-variable readonly-array
-// tslint:disable array-type no-console no-floating-promises no-object-mutation no-let
-// tslint:disable no-expression-statement no-object-mutation
+// tslint:disable
+// tslint:enable prettier
+import * as commander from 'commander'
 import { ColumnMap } from 'iptm'
-import { dagGet, Link } from './dagApi'
+import { DagApi, Link } from './dagApi'
 import { loadAndDecompress } from './encodeDecode'
 
-if (process.argv.length <= 2) {
-  console.log('npm run decompress <ipfs hash>')
+const args = commander
+  .description('Decompresses an ipfs link and outputs it as a json array.')
+  .usage('decompress [options] <ipfs hash>')
+  .option('-v, --verbose', 'verbosity level', (_v, total) => total + 1, 0)
+  .option('--compact', 'compact json output')
+  .option(
+    '--api <string>',
+    'ipfs api to use. defaults to http://localhost:5001. No trailing slashes!',
+  )
+  .parse(process.argv)
+
+// const verbose = args.verbose || 0
+const api: string | undefined = args.api
+const compact: boolean = args.compact || false
+const dagApi = DagApi.of(api)
+
+if (args.args.length === 0) {
+  console.log('missing ipfs hash')
+  args.outputHelp()
   process.exit(1)
 }
-const arg = process.argv[2]
-const link = Link.of(arg)
+const link = Link.of(args.args[0])
 
-loadAndDecompress(dagGet)(link).then(columns1 => {
-  const rows = ColumnMap.toArray(columns1)
-  console.log(JSON.stringify(rows))
-})
+loadAndDecompress(dagApi.get)(link)
+  .then(columns1 => {
+    const rows = ColumnMap.toArray(columns1)
+    const text = compact ? JSON.stringify(rows) : JSON.stringify(rows, undefined, 2)
+    console.log(text)
+  })
+  .catch(error => {
+    console.error('', error)
+    process.exit(4)
+  })

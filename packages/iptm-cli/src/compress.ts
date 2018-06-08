@@ -54,24 +54,29 @@ const dagApi = DagApi.of(api)
 const bufferP =
   args.args.length === 0 ? stdinToBuffer() : Promise.resolve(fs.readFileSync(args.args[0]))
 
-bufferP.then(buffer => {
-  const text = buffer.toString('utf8')
-  const json = JSON.parse(text)
+bufferP
+  .then(buffer => {
+    const text = buffer.toString('utf8')
+    const json = JSON.parse(text)
 
-  if (!Array.isArray(json)) {
-    console.log('must be array!')
-    process.exit(2)
-  }
-
-  const columns = ColumnMap.of(json)
-
-  return compressAndStore(dagApi.put)(columns).then(result => {
-    if (verbose > 0) {
-      console.log('Input size      ', buffer.length)
-      console.log('Compressed size ', result.stats.size)
-      console.log('Ratio           ', (buffer.length / result.stats.size).toFixed(2))
-      console.log('IPFS dag objects', result.stats.blocks)
+    if (!Array.isArray(json)) {
+      console.log('must be array!')
+      process.exit(2)
     }
-    console.log(result.link['/'])
+
+    const columns = ColumnMap.of(json)
+
+    return compressAndStore(dagApi.put)(columns).then(result => {
+      if (verbose > 0) {
+        console.log('Input size      ', buffer.length)
+        console.log('Compressed size ', result.stats.size)
+        console.log('Ratio           ', (buffer.length / result.stats.size).toFixed(2))
+        console.log('IPFS dag objects', result.stats.blocks)
+      }
+      console.log(result.link['/'])
+    })
   })
-})
+  .catch(error => {
+    console.error('', error)
+    process.exit(4)
+  })
