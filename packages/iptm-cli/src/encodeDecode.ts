@@ -67,7 +67,7 @@ export const compressAndStore = <T>(dagPut: DagPut) => (
     .then(index => dagPut(index))
     .then<CompressionResult<T>>(link => {
       const values = Object.values(blockMap)
-      const size = values.reduce((x, y) => x + y, 0)
+      const size = values.reduce((x, y) => x + y, 1)
       const blocks = values.length
       return {
         link,
