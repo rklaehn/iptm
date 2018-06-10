@@ -1,6 +1,6 @@
 {
   "name": "iptm-cli",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "interplanetary telemetry encoding - command line tools",
   "main": "./bin/index.js",
   "preferGlobal": true,
@@ -10,6 +10,13 @@
   "engines": {
     "node": ">=8.11.1"
   },
+  "repository" : {
+    "type" : "git",
+    "url" : "https://github.com/rklaehn/iptm.git"
+  },
+  "keywords": [
+    "IPFS", "compression", "decompression", "timeseries"
+  ],
   "scripts": {
     "prebuild": "rimraf ./bin ./types ./coverage",
     "build": "npm run lint && npm run test:prod && npm run build:commonjs",
