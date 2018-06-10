@@ -6,7 +6,7 @@
     "strictPropertyInitialization": false,
     "noEmit": true,
     "sourceMap": true,
-    "outDir": "./lib",
+    "outDir": "./bin",
     "lib": ["dom", "es2017"],
     "strict": true,
     "noImplicitAny": true,
@@ -21,5 +21,6 @@
     "declaration": true,
     "moduleResolution": "node"
   },
-  "include": ["./src/**/*", "./typings/*.d.ts"]
+  "include": ["./src/**/*", "./typings/*.d.ts"],
+  "exclude": ["src/**/*.spec.ts", "src/**/*.benchmark.ts"]
 }

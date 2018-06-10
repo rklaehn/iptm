@@ -1,15 +1,17 @@
 {
-  "name": "iptm",
+  "name": "iptm-cli",
   "version": "0.1.0",
-  "description": "interplanetary telemetry encoding",
-  "main": "./lib/index.js",
-  "types": "./lib/index.d.ts",
+  "description": "interplanetary telemetry encoding - command line tools",
+  "main": "./bin/index.js",
+  "preferGlobal": true,
+  "bin": "./bin/index.js",
+  "types": "./bin/index.d.ts",
   "license": "Apache-2.0",
   "engines": {
     "node": ">=8.11.1"
   },
   "scripts": {
-    "prebuild": "rimraf ./lib ./types ./coverage",
+    "prebuild": "rimraf ./bin ./types ./coverage",
     "build": "npm run lint && npm run test:prod && npm run build:commonjs",
     "build:commonjs": "tsc -p ./tsconfig.json --noEmit false",
     "lint": "tslint -t codeFrame -p ./tsconfig.json",
@@ -23,8 +25,7 @@
     "tsc": "tsc -p ./tsconfig.json",
     "tsc:watch": "npm run tsc -- --watch --pretty",
     "benchmark": "ts-node ./src/columnMap.benchmark.ts",
-    "compress": "ts-node ./src/compress.ts",
-    "decompress": "ts-node ./src/decompress.ts"
+    "start": "ts-node ./src/index.ts"
   },
   "devDependencies": {
     "@types/benchmark": "^1.0.31",
