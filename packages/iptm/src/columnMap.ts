@@ -3,15 +3,15 @@
 // tslint:disable:readonly-array array-type no-delete no-let no-use-before-declare
 type ColumnMapImpl<T> = {
   s: [Array<number>, Array<T>]
-  children: { [key: string]: ColumnMapImpl<T> }
+  o: { [key: string]: ColumnMapImpl<T> }
 }
 const stripInPlace = <T>(store: ColumnMapImpl<T>): ColumnMap<T> => {
   if (store.s[0].length === 0) {
     delete store.s
   }
-  const children = Object.values(store.children)
+  const children = Object.values(store.o)
   if (children.length === 0) {
-    delete store.children
+    delete store.o
   } else {
     children.forEach(stripInPlace)
   }
@@ -25,7 +25,7 @@ const ColumnMapImpl = {
    */
   empty: <T>(): ColumnMapImpl<T> => ({
     s: [[], []],
-    children: {},
+    o: {},
   }),
   /**
    * Strips unused fields in place and returns the thing as a ColumnStore, never
@@ -37,12 +37,12 @@ const ColumnMapImpl = {
 const lookup = <V>(m: { [k: string]: V }, k: string): V | undefined => m[k]
 
 const getOrCreateInPlace = <T>(store: ColumnMapImpl<T>, key: string): ColumnMapImpl<T> => {
-  const result = lookup(store.children, key)
+  const result = lookup(store.o, key)
   if (result !== undefined) {
     return result
   } else {
     const child = ColumnMapImpl.empty<T>()
-    store.children[key] = child
+    store.o[key] = child
     return child
   }
 }
@@ -99,8 +99,8 @@ export const fromColumnMap = <T>(columns: ColumnMap<T>): RA<T> => {
         updateInPlace(rows, path, 0, value)
       }
     }
-    if (store.children !== undefined) {
-      const children = store.children
+    if (store.o !== undefined) {
+      const children = store.o
       Object.entries(children).forEach(([key, childStore]) => {
         path.push(key)
         addToRows(childStore)
@@ -140,8 +140,8 @@ const maxIndex = (a: ColumnMap<any>, max: number): number => {
       currentMax = Math.max(currentMax, indices[indices.length - 1])
     }
   }
-  if (a.children) {
-    Object.values(a.children).forEach(child => {
+  if (a.o) {
+    Object.values(a.o).forEach(child => {
       currentMax = maxIndex(child, currentMax)
     })
   }
@@ -152,8 +152,8 @@ const shiftIndices = <T>(a: ColumnMap<T>, offset: number): ColumnMap<T> => {
   const scalar: [RA<number>, RA<T>] | undefined = a.s
     ? [a.s[0].map(x => x + offset), a.s[1]]
     : undefined
-  const children = a.children
-    ? Object.entries(a.children).reduce(
+  const objects = a.o
+    ? Object.entries(a.o).reduce(
         (acc, [k, v]) => {
           acc[k] = shiftIndices(v, offset)
           return acc
@@ -161,18 +161,18 @@ const shiftIndices = <T>(a: ColumnMap<T>, offset: number): ColumnMap<T> => {
         {} as { [key: string]: ColumnMap<T> },
       )
     : undefined
-  return { s: scalar, children }
+  return { s: scalar, o: objects }
 }
 
 const concat0 = <T>(a: ColumnMap<T>, b: ColumnMap<T>): ColumnMap<T> => {
   const av = a.s || [[], []]
   const bv = b.s || [[], []]
-  const ac = a.children || {}
-  const bc = b.children || {}
+  const ac = a.o || {}
+  const bc = b.o || {}
   const i1 = av[0].concat(bv[0])
   const v1 = av[1].concat(bv[1])
   const scalar: typeof a.s = i1.length > 0 ? [i1, v1] : undefined
-  const children: typeof a.children = { ...ac, ...bc }
+  const children: typeof a.o = { ...ac, ...bc }
   const keys = Object.keys(children)
   keys.forEach(key => {
     const childa: ColumnMap<T> = ac[key]
@@ -181,7 +181,7 @@ const concat0 = <T>(a: ColumnMap<T>, b: ColumnMap<T>): ColumnMap<T> => {
       children[key] = concat0(childa, childb)
     }
   })
-  return { s: scalar, children: keys.length > 0 ? children : undefined }
+  return { s: scalar, o: keys.length > 0 ? children : undefined }
 }
 
 // @ts-ignore
@@ -225,11 +225,11 @@ type ColumnIteratorMap<T> = Readonly<{
 const ColumnIteratorMap = {
   of: <T>(m: ColumnMap<T>): ColumnIteratorMap<T> => {
     const values = m.s !== undefined ? ColumnIterator.of(m.s) : undefined
-    if (m.children === undefined) {
+    if (m.o === undefined) {
       return { values }
     } else {
       const children: { [key: string]: ColumnIteratorMap<any> } = {}
-      Object.entries(m.children).forEach(([key, value]) => {
+      Object.entries(m.o).forEach(([key, value]) => {
         children[key] = ColumnIteratorMap.of(value)
       })
       return { values, children }
@@ -298,7 +298,7 @@ const iterable = <T>(value: ColumnMap<T>): Iterable<T> => ({
 export type RA<T> = ReadonlyArray<T>
 export type ColumnMap<T> = Readonly<{
   s?: [RA<number>, RA<any>]
-  children?: { [key: string]: ColumnMap<any> }
+  o?: { [key: string]: ColumnMap<any> }
 }>
 export interface ColumnMapBuilder<T> {
   add: (value: T) => void

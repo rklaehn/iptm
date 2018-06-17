@@ -10,7 +10,7 @@ const rows: ReadonlyArray<any> = [
 ]
 
 const cols = {
-  children: {
+  o: {
     line: {
       s: [[0, 1, 2, 3, 4, 5], ['t800', 't800', 't800', 't800', 't800', 't800']],
     },

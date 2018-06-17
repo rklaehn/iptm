@@ -58,7 +58,7 @@ const columnMapTest = (name: string, roundtrip: <T>(rows: RA<T>) => RA<T>) =>
 
     it('should not allow converting invalid column maps to array', () => {
       const cols = {
-        children: {
+        o: {
           line: {
             s: [[0, 1], ['t800']],
           },

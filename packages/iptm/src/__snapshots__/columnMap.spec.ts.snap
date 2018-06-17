@@ -2,7 +2,7 @@
 
 exports[`builder/fromColumnMap should properly deal with missing values 1`] = `
 Object {
-  "children": Object {
+  "o": Object {
     "x": Object {
       "s": Array [
         Array [
@@ -29,9 +29,9 @@ Object {
 
 exports[`builder/fromColumnMap should properly deal with nested objects 1`] = `
 Object {
-  "children": Object {
+  "o": Object {
     "data": Object {
-      "children": Object {
+      "o": Object {
         "reason": Object {
           "s": Array [
             Array [
@@ -72,7 +72,7 @@ Object {
 
 exports[`builder/fromColumnMap should properly deal with weird javascript crap 1`] = `
 Object {
-  "children": Object {
+  "o": Object {
     "0": Object {
       "s": Array [
         Array [
@@ -219,7 +219,7 @@ Object {
 
 exports[`builder/fromColumnMap should work for normal time series data 1`] = `
 Object {
-  "children": Object {
+  "o": Object {
     "x": Object {
       "s": Array [
         Array [
@@ -250,7 +250,7 @@ Object {
 
 exports[`toColumnMap/fromColumnMap should properly deal with missing values 1`] = `
 Object {
-  "children": Object {
+  "o": Object {
     "x": Object {
       "s": Array [
         Array [
@@ -277,9 +277,9 @@ Object {
 
 exports[`toColumnMap/fromColumnMap should properly deal with nested objects 1`] = `
 Object {
-  "children": Object {
+  "o": Object {
     "data": Object {
-      "children": Object {
+      "o": Object {
         "reason": Object {
           "s": Array [
             Array [
@@ -320,7 +320,7 @@ Object {
 
 exports[`toColumnMap/fromColumnMap should properly deal with weird javascript crap 1`] = `
 Object {
-  "children": Object {
+  "o": Object {
     "0": Object {
       "s": Array [
         Array [
@@ -467,7 +467,7 @@ Object {
 
 exports[`toColumnMap/fromColumnMap should work for normal time series data 1`] = `
 Object {
-  "children": Object {
+  "o": Object {
     "x": Object {
       "s": Array [
         Array [
@@ -498,7 +498,7 @@ Object {
 
 exports[`toColumnMap/iterable should properly deal with missing values 1`] = `
 Object {
-  "children": Object {
+  "o": Object {
     "x": Object {
       "s": Array [
         Array [
@@ -525,9 +525,9 @@ Object {
 
 exports[`toColumnMap/iterable should properly deal with nested objects 1`] = `
 Object {
-  "children": Object {
+  "o": Object {
     "data": Object {
-      "children": Object {
+      "o": Object {
         "reason": Object {
           "s": Array [
             Array [
@@ -568,7 +568,7 @@ Object {
 
 exports[`toColumnMap/iterable should properly deal with weird javascript crap 1`] = `
 Object {
-  "children": Object {
+  "o": Object {
     "0": Object {
       "s": Array [
         Array [
@@ -715,7 +715,7 @@ Object {
 
 exports[`toColumnMap/iterable should work for normal time series data 1`] = `
 Object {
-  "children": Object {
+  "o": Object {
     "x": Object {
       "s": Array [
         Array [
