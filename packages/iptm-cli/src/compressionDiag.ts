@@ -5,14 +5,14 @@ import * as shajs from 'sha.js'
 
 export const compressedSize = async (m: ColumnMap<any>): Promise<number> => {
   let result = 0
-  if (m.values !== undefined) {
+  if (m.s !== undefined) {
     // enable delta compression for indices
-    result += await DagArray.getCompressedSize(m.values[0], { forceDelta: true })
+    result += await DagArray.getCompressedSize(m.s[0], { forceDelta: true })
     // let the compressor figure out if delta compression makes sense
-    result += await DagArray.getCompressedSize(m.values[1])
+    result += await DagArray.getCompressedSize(m.s[1])
   }
-  if (m.children !== undefined) {
-    for (const child of Object.values(m.children)) {
+  if (m.o !== undefined) {
+    for (const child of Object.values(m.o)) {
       result += await compressedSize(child)
     }
   }
@@ -39,17 +39,17 @@ const compressedSizeDedupImpl = async (
   m: ColumnMap<any>,
   sizes: { [key: string]: number },
 ): Promise<{ [key: string]: number }> => {
-  if (m.values !== undefined) {
+  if (m.s !== undefined) {
     // enable delta compression for indices
-    const indices = await DagArray.compress(m.values[0], { forceDelta: true })
-    const values = await DagArray.compress(m.values[1])
+    const indices = await DagArray.compress(m.s[0], { forceDelta: true })
+    const values = await DagArray.compress(m.s[1])
     const ib = await getBufferForSizing(indices)
     const vb = await getBufferForSizing(values)
     sizes[sha1(ib)] = ib.length
     sizes[sha1(vb)] = vb.length
   }
-  if (m.children !== undefined) {
-    for (const child of Object.values(m.children)) {
+  if (m.o !== undefined) {
+    for (const child of Object.values(m.o)) {
       await compressedSizeDedupImpl(child, sizes)
     }
   }
