@@ -60,7 +60,7 @@ const columnMapTest = (name: string, roundtrip: <T>(rows: RA<T>) => RA<T>) =>
       const cols = {
         children: {
           line: {
-            values: [[0, 1], ['t800']],
+            s: [[0, 1], ['t800']],
           },
         },
       }

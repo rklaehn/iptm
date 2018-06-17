@@ -12,19 +12,19 @@ const rows: ReadonlyArray<any> = [
 const cols = {
   children: {
     line: {
-      values: [[0, 1, 2, 3, 4, 5], ['t800', 't800', 't800', 't800', 't800', 't800']],
+      s: [[0, 1, 2, 3, 4, 5], ['t800', 't800', 't800', 't800', 't800', 't800']],
     },
     type: {
-      values: [[0, 1, 2, 3, 4, 5], ['start', 'pause', 'resume', 'pause', 'resume', 'stop']],
+      s: [[0, 1, 2, 3, 4, 5], ['start', 'pause', 'resume', 'pause', 'resume', 'stop']],
     },
     timestamp: {
-      values: [[0, 1, 2, 3, 4, 5], [1000, 2000, 3000, 4000, 5000, 6000]],
+      s: [[0, 1, 2, 3, 4, 5], [1000, 2000, 3000, 4000, 5000, 6000]],
     },
     reason: {
-      values: [[1, 3], ['machine on fire', 'coffee break']],
+      s: [[1, 3], ['machine on fire', 'coffee break']],
     },
     produced: {
-      values: [[5], [1000]],
+      s: [[5], [1000]],
     },
   },
 }
