@@ -27,6 +27,49 @@ Object {
 }
 `;
 
+exports[`builder/fromColumnMap should properly deal with nested arrays 1`] = `
+Object {
+  "a": Array [
+    Object {
+      "s": Array [
+        Array [
+          0,
+          1,
+          2,
+        ],
+        Array [
+          "a",
+          "a",
+          "a",
+        ],
+      ],
+    },
+    Object {
+      "s": Array [
+        Array [
+          0,
+          1,
+        ],
+        Array [
+          "b",
+          "c",
+        ],
+      ],
+    },
+    Object {
+      "s": Array [
+        Array [
+          0,
+        ],
+        Array [
+          "c",
+        ],
+      ],
+    },
+  ],
+}
+`;
+
 exports[`builder/fromColumnMap should properly deal with nested objects 1`] = `
 Object {
   "o": Object {
@@ -275,6 +318,49 @@ Object {
 }
 `;
 
+exports[`toColumnMap/fromColumnMap should properly deal with nested arrays 1`] = `
+Object {
+  "a": Array [
+    Object {
+      "s": Array [
+        Array [
+          0,
+          1,
+          2,
+        ],
+        Array [
+          "a",
+          "a",
+          "a",
+        ],
+      ],
+    },
+    Object {
+      "s": Array [
+        Array [
+          0,
+          1,
+        ],
+        Array [
+          "b",
+          "c",
+        ],
+      ],
+    },
+    Object {
+      "s": Array [
+        Array [
+          0,
+        ],
+        Array [
+          "c",
+        ],
+      ],
+    },
+  ],
+}
+`;
+
 exports[`toColumnMap/fromColumnMap should properly deal with nested objects 1`] = `
 Object {
   "o": Object {
@@ -520,6 +606,49 @@ Object {
       ],
     },
   },
+}
+`;
+
+exports[`toColumnMap/iterable should properly deal with nested arrays 1`] = `
+Object {
+  "a": Array [
+    Object {
+      "s": Array [
+        Array [
+          0,
+          1,
+          2,
+        ],
+        Array [
+          "a",
+          "a",
+          "a",
+        ],
+      ],
+    },
+    Object {
+      "s": Array [
+        Array [
+          0,
+          1,
+        ],
+        Array [
+          "b",
+          "c",
+        ],
+      ],
+    },
+    Object {
+      "s": Array [
+        Array [
+          0,
+        ],
+        Array [
+          "c",
+        ],
+      ],
+    },
+  ],
 }
 `;
 

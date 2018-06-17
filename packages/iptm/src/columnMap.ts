@@ -4,16 +4,23 @@
 type ColumnMapImpl<T> = {
   s: [Array<number>, Array<T>]
   o: { [key: string]: ColumnMapImpl<T> }
+  a: Array<ColumnMapImpl<T>>
 }
 const stripInPlace = <T>(store: ColumnMapImpl<T>): ColumnMap<T> => {
   if (store.s[0].length === 0) {
     delete store.s
   }
-  const children = Object.values(store.o)
-  if (children.length === 0) {
+  const o = Object.values(store.o)
+  if (o.length === 0) {
     delete store.o
   } else {
-    children.forEach(stripInPlace)
+    o.forEach(stripInPlace)
+  }
+  const a = store.a
+  if (a.length === 0) {
+    delete store.a
+  } else {
+    a.forEach(stripInPlace)
   }
   return store
 }
@@ -26,6 +33,7 @@ const ColumnMapImpl = {
   empty: <T>(): ColumnMapImpl<T> => ({
     s: [[], []],
     o: {},
+    a: [],
   }),
   /**
    * Strips unused fields in place and returns the thing as a ColumnStore, never
@@ -34,15 +42,28 @@ const ColumnMapImpl = {
   build: stripInPlace,
 }
 
-const lookup = <V>(m: { [k: string]: V }, k: string): V | undefined => m[k]
+const lookupO = <V>(m: { [k: string]: V }, k: string): V | undefined => m[k]
 
-const getOrCreateInPlace = <T>(store: ColumnMapImpl<T>, key: string): ColumnMapImpl<T> => {
-  const result = lookup(store.o, key)
+const getOrCreateO = <T>(store: ColumnMapImpl<T>, key: string): ColumnMapImpl<T> => {
+  const result = lookupO(store.o, key)
   if (result !== undefined) {
     return result
   } else {
     const child = ColumnMapImpl.empty<T>()
     store.o[key] = child
+    return child
+  }
+}
+
+const lookupA = <V>(a: ReadonlyArray<V>, index: number): V | undefined => a[index]
+
+const getOrCreateA = <T>(store: ColumnMapImpl<T>, index: number): ColumnMapImpl<T> => {
+  const result = lookupA(store.a, index)
+  if (result !== undefined) {
+    return result
+  } else {
+    const child = ColumnMapImpl.empty<T>()
+    store.a[index] = child
     return child
   }
 }
@@ -67,6 +88,11 @@ const updateInPlace = (obj: any, path: RA<string>, from: number, value: any): an
     return value
   } else {
     const key = path[from]
+    if (typeof key === 'number') {
+      console.log('got number key', key)
+      throw new Error('WAT?')
+    }
+    // if (typeof key === 'string') {
     const child = obj[key]
     const childExists = child !== undefined
     const child1 = childExists ? child : {}
@@ -78,6 +104,19 @@ const updateInPlace = (obj: any, path: RA<string>, from: number, value: any): an
     if (mustUpdate) {
       obj[key] = child2
     }
+    // } else if (typeof key === 'number') {
+    //   const child = obj[key]
+    //   const childExists = child !== undefined
+    //   const child1 = childExists ? child : []
+    //   const child2 = updateInPlace(child1, path, from + 1, value)
+    //   // if the column store is canonical, I will never overwrite a scalar value,
+    //   // and the from === path.length - 1 test is not necessary. But let's accept
+    //   // non-canonical formats as well
+    //   const mustUpdate = from === path.length - 1 || !childExists
+    //   if (mustUpdate) {
+    //     obj[key] = child2
+    //   }
+    // }
     return obj
   }
 }
@@ -95,7 +134,7 @@ export const fromColumnMap = <T>(columns: ColumnMap<T>): RA<T> => {
       for (let i = 0; i < values.length; i++) {
         const index = indices[i]
         const value = values[i]
-        path[0] = index
+        path[0] = String(index)
         updateInPlace(rows, path, 0, value)
       }
     }
@@ -107,6 +146,17 @@ export const fromColumnMap = <T>(columns: ColumnMap<T>): RA<T> => {
         path.pop()
       })
     }
+    // if (store.a !== undefined) {
+    //   const children = store.a
+    //   for (let key = 0; key < children.length; key += 1) {
+    //     const childStore = lookupA(store.a, key)
+    //     if (childStore !== undefined) {
+    //       path.push(key)
+    //       addToRows(childStore)
+    //       path.pop()
+    //     }
+    //   }
+    // }
   }
   addToRows(columns)
   return Object.values(rows)
@@ -116,9 +166,17 @@ const addToValuesAndIndices = (store: ColumnMapImpl<any>, obj: any, index: numbe
   if (isPrimitive(obj)) {
     store.s[0].push(index)
     store.s[1].push(obj)
+  } else if (Array.isArray(obj)) {
+    for (let key = 0; key < obj.length; key += 1) {
+      const childStore = getOrCreateA(store, key)
+      const value = lookupA(obj, key)
+      if (value !== undefined) {
+        addToValuesAndIndices(childStore, value, index)
+      }
+    }
   } else {
     Object.entries(obj).forEach(([key, value]) => {
-      const childStore = getOrCreateInPlace(store, key)
+      const childStore = getOrCreateO(store, key)
       addToValuesAndIndices(childStore, value, index)
     })
   }
@@ -297,8 +355,18 @@ const iterable = <T>(value: ColumnMap<T>): Iterable<T> => ({
 // #endregion
 export type RA<T> = ReadonlyArray<T>
 export type ColumnMap<T> = Readonly<{
+  /**
+   * Scalar values. Separate arrays of indices and values
+   */
   s?: [RA<number>, RA<any>]
+  /**
+   * Object children, indexed by string
+   */
   o?: { [key: string]: ColumnMap<any> }
+  /**
+   * Array children, indexed by number (dense)
+   */
+  a?: RA<ColumnMap<any>>
 }>
 export interface ColumnMapBuilder<T> {
   add: (value: T) => void
