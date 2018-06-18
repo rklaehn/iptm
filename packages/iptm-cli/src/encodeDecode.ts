@@ -9,6 +9,7 @@ export type ColumnIndex<T> = Readonly<{
   o?: {
     [key: string]: ColumnIndex<any>
   }
+  a?: ReadonlyArray<ColumnIndex<any>>
 }>
 
 const bufferToString = (x: DagArray): DagArray => {
@@ -43,7 +44,8 @@ export const compressAndStore = <T>(dagPut: DagPut) => (
   const blockMap: { [key: string]: number } = {}
   const toIndex = async (m: ColumnMap<any>): Promise<ColumnIndex<any>> => {
     let result: ColumnIndex<any> = {}
-    const objects: any = {}
+    const o: any = {}
+    const a: any[] = []
     if (m.s !== undefined) {
       const compressedIndices = await DagArray.compress(m.s[0])
       const compressedValues = await DagArray.compress(m.s[1])
@@ -55,11 +57,21 @@ export const compressAndStore = <T>(dagPut: DagPut) => (
     }
     if (m.o !== undefined) {
       for (const [key, child] of Object.entries(m.o)) {
-        objects[key] = await toIndex(child)
+        o[key] = await toIndex(child)
       }
     }
-    if (Object.keys(objects).length > 0) {
-      result = { ...result, o: objects }
+    if (m.a !== undefined) {
+      for (let i = 0; i < m.a.length; i++) {
+        if (m.a[i] !== undefined) {
+          a[i] = await toIndex(m.a[i])
+        }
+      }
+    }
+    if (Object.keys(o).length > 0) {
+      result = { ...result, o }
+    }
+    if (a.length > 0) {
+      result = { ...result, a }
     }
     return result
   }
@@ -84,7 +96,8 @@ export const loadAndDecompress = <T>(dagGet: DagGet) => (
 ): Promise<ColumnMap<T>> => {
   const toColumnMap = async (m: ColumnIndex<any>): Promise<ColumnMap<any>> => {
     let result: ColumnMap<any> = {}
-    const objects: any = {}
+    const o: any = {}
+    const a: any[] = []
     if (m.s !== undefined) {
       const ic: DagArray = stringToBuffer(await dagGet(m.s[0]))
       const vc: DagArray = stringToBuffer(await dagGet(m.s[1]))
@@ -94,11 +107,21 @@ export const loadAndDecompress = <T>(dagGet: DagGet) => (
     }
     if (m.o !== undefined) {
       for (const [key, child] of Object.entries(m.o)) {
-        objects[key] = await toColumnMap(child)
+        o[key] = await toColumnMap(child)
       }
     }
-    if (Object.keys(objects).length > 0) {
-      result = { ...result, o: objects }
+    if (m.a !== undefined) {
+      for (let i = 0; i < m.a.length; i++) {
+        if (m.a[i] !== undefined) {
+          a[i] = await toColumnMap(m.a[i])
+        }
+      }
+    }
+    if (Object.keys(o).length > 0) {
+      result = { ...result, o }
+    }
+    if (a.length > 0) {
+      result = { ...result, a }
     }
     return result
   }

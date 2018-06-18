@@ -27,11 +27,18 @@ const columnMapTest = (name: string, roundtrip: <T>(rows: RA<T>) => RA<T>) =>
       expect(roundtrip(rows)).toEqual(rows)
     })
 
-    it.skip('should properly deal with nested arrays', () => {
+    it('should properly deal with nested arrays 1', () => {
       const rows = [['a', 'b', 'c'], ['a', 'c'], ['a']]
 
       expect(ColumnMap.of(rows)).toMatchSnapshot()
-      // expect(roundtrip(rows)).toEqual(rows)
+      expect(roundtrip(rows)).toEqual(rows)
+    })
+
+    it('should properly deal with nested arrays 2', () => {
+      const rows = [[0,1],[2,3]]
+
+      expect(ColumnMap.of(rows)).toMatchSnapshot()
+      expect(roundtrip(rows)).toEqual(rows)
     })
 
     it('should properly deal with weird javascript crap', () => {
@@ -96,5 +103,5 @@ const builderRoundtrip = <T>(rows: RA<T>): RA<T> => {
 }
 
 columnMapTest('toColumnMap/fromColumnMap', fromToRoundtrip)
-// columnMapTest('toColumnMap/iterable', iterableRoundtrip)
-// columnMapTest('builder/fromColumnMap', builderRoundtrip)
+columnMapTest('toColumnMap/iterable', iterableRoundtrip)
+columnMapTest('builder/fromColumnMap', builderRoundtrip)

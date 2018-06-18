@@ -82,84 +82,75 @@ const isPrimitive = (key: any): boolean => {
   return true
 }
 
-const updateInPlace = (obj: any, path: RA<string>, from: number, value: any): any => {
+const updateInPlace = (
+  obj: any,
+  path: ReadonlyArray<string | number>,
+  from: number,
+  value: any,
+): any => {
   if (from === path.length) {
-    // at the end, just return the value and let the caller deal with storing it
     return value
   } else {
     const key = path[from]
-    if (typeof key === 'number') {
-      console.log('got number key', key)
-      throw new Error('WAT?')
+    if (typeof key === 'string') {
+      const obj1 = obj !== undefined ? obj : {}
+      const child = obj1[key]
+      const child1 = updateInPlace(child, path, from + 1, value)
+      if (child1 !== child) {
+        obj1[key] = child1
+      }
+      return obj1
+    } else {
+      const obj1 = obj !== undefined ? obj : []
+      const child = obj1[key]
+      const child1 = updateInPlace(child, path, from + 1, value)
+      if (child1 !== child) {
+        obj1[key] = child1
+      }
+      return obj1
     }
-    // if (typeof key === 'string') {
-    const child = obj[key]
-    const childExists = child !== undefined
-    const child1 = childExists ? child : {}
-    const child2 = updateInPlace(child1, path, from + 1, value)
-    // if the column store is canonical, I will never overwrite a scalar value,
-    // and the from === path.length - 1 test is not necessary. But let's accept
-    // non-canonical formats as well
-    const mustUpdate = from === path.length - 1 || !childExists
-    if (mustUpdate) {
-      obj[key] = child2
-    }
-    // } else if (typeof key === 'number') {
-    //   const child = obj[key]
-    //   const childExists = child !== undefined
-    //   const child1 = childExists ? child : []
-    //   const child2 = updateInPlace(child1, path, from + 1, value)
-    //   // if the column store is canonical, I will never overwrite a scalar value,
-    //   // and the from === path.length - 1 test is not necessary. But let's accept
-    //   // non-canonical formats as well
-    //   const mustUpdate = from === path.length - 1 || !childExists
-    //   if (mustUpdate) {
-    //     obj[key] = child2
-    //   }
-    // }
-    return obj
   }
 }
 
 export const fromColumnMap = <T>(columns: ColumnMap<T>): RA<T> => {
-  const rows: any = {}
   // first position is placeholder for the current index
   const path: Array<any> = [undefined]
-  const addToRows = (store: ColumnMap<T>): void => {
+  const addToRows = (rows: any, store: ColumnMap<T>): any => {
+    let result = rows
     if (store.s !== undefined) {
       const [indices, values] = store.s
-      if (values.length !== indices.length) {
+      if (indices.length !== values.length) {
         throw new Error()
       }
       for (let i = 0; i < values.length; i++) {
         const index = indices[i]
         const value = values[i]
-        path[0] = String(index)
-        updateInPlace(rows, path, 0, value)
+        path[0] = index
+        result = updateInPlace(result, path, 0, value)
       }
     }
     if (store.o !== undefined) {
       const children = store.o
       Object.entries(children).forEach(([key, childStore]) => {
         path.push(key)
-        addToRows(childStore)
+        result = addToRows(result, childStore)
         path.pop()
       })
     }
-    // if (store.a !== undefined) {
-    //   const children = store.a
-    //   for (let key = 0; key < children.length; key += 1) {
-    //     const childStore = lookupA(store.a, key)
-    //     if (childStore !== undefined) {
-    //       path.push(key)
-    //       addToRows(childStore)
-    //       path.pop()
-    //     }
-    //   }
-    // }
+    if (store.a !== undefined) {
+      const children = store.a
+      for (let key = 0; key < children.length; key += 1) {
+        const childStore = lookupA(store.a, key)
+        if (childStore !== undefined) {
+          path.push(key)
+          result = addToRows(result, childStore)
+          path.pop()
+        }
+      }
+    }
+    return result
   }
-  addToRows(columns)
-  return Object.values(rows)
+  return addToRows(undefined, columns)
 }
 
 const addToValuesAndIndices = (store: ColumnMapImpl<any>, obj: any, index: number): void => {
@@ -276,35 +267,42 @@ const ColumnIterator = {
 }
 
 type ColumnIteratorMap<T> = Readonly<{
-  values?: ColumnIterator
-  children?: { [key: string]: ColumnIteratorMap<any> }
+  s?: ColumnIterator
+  o?: { [key: string]: ColumnIteratorMap<any> }
+  a?: ReadonlyArray<ColumnIteratorMap<any>>
 }>
 
 const ColumnIteratorMap = {
   of: <T>(m: ColumnMap<T>): ColumnIteratorMap<T> => {
-    const values = m.s !== undefined ? ColumnIterator.of(m.s) : undefined
-    if (m.o === undefined) {
-      return { values }
-    } else {
-      const children: { [key: string]: ColumnIteratorMap<any> } = {}
-      Object.entries(m.o).forEach(([key, value]) => {
-        children[key] = ColumnIteratorMap.of(value)
-      })
-      return { values, children }
+    const result: any = {}
+    if (m.s !== undefined) {
+      result.s = ColumnIterator.of(m.s)
     }
+    if (m.o !== undefined) {
+      const o: { [key: string]: ColumnIteratorMap<any> } = {}
+      Object.entries(m.o).forEach(([key, value]) => {
+        o[key] = ColumnIteratorMap.of(value)
+      })
+      result.o = o
+    }
+    if (m.a !== undefined) {
+      const a = m.a.map(ColumnIteratorMap.of)
+      result.a = a
+    }
+    return result
   },
 }
 
 const iterate0 = <T>(im: ColumnIteratorMap<T>, index: number, rs: ColumnIteratorResult): void => {
-  if (im.values) {
-    im.values.next(index, rs)
+  if (im.s) {
+    im.s.next(index, rs)
     if (rs.hasValue) {
       return
     }
   }
   let result: any
-  if (im.children) {
-    Object.entries(im.children).forEach(([key, value]) => {
+  if (im.o) {
+    Object.entries(im.o).forEach(([key, value]) => {
       iterate0(value, index, rs)
       if (rs.hasValue) {
         if (result === undefined) {
@@ -313,6 +311,20 @@ const iterate0 = <T>(im: ColumnIteratorMap<T>, index: number, rs: ColumnIterator
         result[key] = rs.value
       }
     })
+  }
+  if (im.a) {
+    for (let i = 0; i < im.a.length; i++) {
+      const value = lookupA(im.a, i)
+      if (value !== undefined) {
+        iterate0(value, index, rs)
+        if (rs.hasValue) {
+          if (result === undefined) {
+            result = []
+          }
+          result[i] = rs.value
+        }
+      }
+    }
   }
   rs.hasValue = result !== undefined
   rs.value = result
