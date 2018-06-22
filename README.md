@@ -14,4 +14,4 @@ https://github.com/rklaehn/iptm/tree/master/packages/iptm-cli
 
 ## License
 
-MIT
+[MIT](https://github.com/rklaehn/iptm/LICENSE)
