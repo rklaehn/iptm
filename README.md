@@ -14,4 +14,4 @@ https://github.com/rklaehn/iptm/tree/master/packages/iptm-cli
 
 ## License
 
-[Apache 2](https://www.apache.org/licenses/LICENSE-2.0.html)
+MIT
